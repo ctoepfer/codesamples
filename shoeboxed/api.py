@@ -1,3 +1,12 @@
+__author__ = "Charles Toepfer"
+__copyright__ = ""
+__credits__ = [""]
+__license__ = ""
+__version__ = "0.0.1"
+__maintainer__ = ""
+__email__ = "charles.toepfer@gmail.com"
+__status__ = "Test"
+
 import string
 import webbrowser
 import random
