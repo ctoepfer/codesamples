@@ -189,7 +189,8 @@ Function AudioLoadLiveFeed() As Object
   date = CreateObject("roDateTime")
   o.ReleaseDate = date.AsDateString("long-date")
 
-  o.Url = "http://live.darkmatterradio.net:8303/stream?type=.mp3"
+  'o.Url = "http://live.darkmatterradio.net:8303/stream?type=.mp3"
+  o.Url = "http://live1.darkmatterdigitalnetwork.com:8303/stream?type=.mp3"
   o.StreamFormat = "mp3"
   o.CurrentPosition = 0
 
