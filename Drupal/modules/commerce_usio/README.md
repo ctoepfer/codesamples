@@ -108,10 +108,13 @@ Storing credentials in the Drupal database means they appear in database dumps a
 USIO_MERCHANT_ID=your_merchant_id
 USIO_LOGIN=your_api_login
 USIO_PASSWORD=your_api_password
-USIO_TERMINAL_ID=your_terminal_id   # optional
+USIO_TERMINAL_ID=your_terminal_id     # optional
+USIO_MERCHANT_KEY=your_merchant_key   # client-side Checkout.js ApiKey
 ```
 
 The module checks for these variables at runtime and falls back to the stored database values only when the variables are not set.
+
+> **Note on `USIO_MERCHANT_KEY`:** Unlike the server-side credentials, the Merchant Key is sent to the browser to initialise the USIO Checkout.js iframe (analogous to Stripe's publishable key). It is intentionally semi-public. However, you should still supply it via an environment variable rather than committing it to version control, and you should avoid including it in `drush cex` exports.
 
 In DDEV, add them to `.ddev/.env` (gitignored). In production, set them in your server environment, Docker Compose, or a secrets manager.
 
@@ -122,7 +125,7 @@ In DDEV, add them to `.ddev/.env` (gitignored). In production, set them in your 
 - **Do not commit real credentials** to version control.  
 - **Do not run `drush cex`** with production credentials stored in the database — the export will include them in plain-text YAML files.
 - The API password field uses `#type => 'password'` and is never pre-populated in the form, but it is stored in plain text in the Drupal database. Use environment variables for production (see above).
-- The **Merchant Key** (`ApiKey`) is intentionally sent to the browser to initialise the USIO Checkout.js iframe. Treat it as a semi-public client-side key (analogous to Stripe's publishable key), but still keep it out of version control.
+- The **Merchant Key** (`ApiKey`) is intentionally sent to the browser to initialise the USIO Checkout.js iframe. Treat it as a semi-public client-side key (analogous to Stripe's publishable key). Supply it via `USIO_MERCHANT_KEY` so it stays out of version control and `drush cex` exports.
 - API request/response bodies are **never logged**. Only the HTTP status code and endpoint name are written to the Drupal log on failure, to avoid leaking customer PII or credentials.
 - WCAG 2.1 Level AA accessibility is applied to all form elements and error regions.
 

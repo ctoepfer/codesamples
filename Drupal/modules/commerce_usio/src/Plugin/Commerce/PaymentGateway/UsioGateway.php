@@ -334,10 +334,13 @@ class UsioGateway extends OnsitePaymentGatewayBase implements SupportsCreatingPa
   }
 
   /**
-   * Returns the configured merchant key for client-side use.
+   * Returns the merchant key for client-side Checkout.js use.
+   *
+   * Env var USIO_MERCHANT_KEY takes precedence over stored config so that
+   * credentials can be supplied without touching the database.
    */
   public function getMerchantKey(): string {
-    return $this->configuration['merchant_key'] ?? '';
+    return getenv('USIO_MERCHANT_KEY') ?: ($this->configuration['merchant_key'] ?? '');
   }
 
   /**
