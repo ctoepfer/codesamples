@@ -1,0 +1,33 @@
+form:
+  css:
+    theme:
+      css/commerce_usio.form.css: {}
+  js:
+    js/commerce_usio.form.js:
+      attributes:
+        defer: true
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/drupalSettings
+
+checkout_js_sandbox:
+  remote: https://devcheckout.usiopay.com/2.0/checkout.js
+  version: '2.0'
+  license:
+    name: USIO Terms of Service
+    url: https://usiopay.com/
+    gpl-compatible: false
+  js:
+    https://devcheckout.usiopay.com/2.0/checkout.js: { type: external, minified: true }
+
+checkout_js_production:
+  remote: https://checkout.usiopay.com/2.0/checkout.js
+  version: '2.0'
+  license:
+    name: USIO Terms of Service
+    url: https://usiopay.com/
+    gpl-compatible: false
+  js:
+    https://checkout.usiopay.com/2.0/checkout.js: { type: external, minified: true }

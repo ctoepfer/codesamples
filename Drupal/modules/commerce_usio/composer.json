@@ -1,0 +1,17 @@
+{
+    "name": "ctoepfer/commerce_usio",
+    "type": "drupal-module",
+    "description": "Drupal Commerce payment gateway module for USIO Payments (Checkout.js token-based flow).",
+    "keywords": ["Drupal", "Commerce", "USIO", "Payment Gateway"],
+    "homepage": "https://github.com/ctoepfer/codesamples",
+    "license": "MIT",
+    "require": {
+        "drupal/core": "^10 || ^11",
+        "drupal/commerce": "^2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Drupal\\commerce_usio\\": "src/"
+        }
+    }
+}

@@ -1,0 +1,4 @@
+administer commerce usio:
+  title: 'Administer Commerce USIO'
+  description: 'Access the USIO global settings page.'
+  restrict access: true

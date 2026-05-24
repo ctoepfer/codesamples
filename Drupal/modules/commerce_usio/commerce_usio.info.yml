@@ -1,0 +1,8 @@
+name: Commerce USIO
+type: module
+description: 'Provides Commerce integration for USIO Payments (Checkout.js token-based).'
+package: Commerce (contrib)
+core_version_requirement: ^10 || ^11
+configure: commerce_usio.settings
+dependencies:
+  - commerce:commerce_payment

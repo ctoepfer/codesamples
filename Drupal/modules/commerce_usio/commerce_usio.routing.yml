@@ -1,0 +1,7 @@
+commerce_usio.settings:
+  path: '/admin/commerce/config/usio'
+  defaults:
+    _form: '\Drupal\commerce_usio\Form\UsioSettings'
+    _title: 'USIO settings'
+  requirements:
+    _permission: 'administer commerce usio'

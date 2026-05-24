@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Commerce USIO module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function commerce_usio_help($route_name, RouteMatchInterface $route_match) {
+  if ($route_name === 'help.page.commerce_usio') {
+    return '<p>' . t('Integrates USIO Payments with Drupal Commerce using the USIO Checkout.js embedded tokenisation flow. Configure gateway instances at <a href=":url">Commerce &rarr; Payment gateways</a>.', [':url' => '/admin/commerce/config/payment-gateways']) . '</p>';
+  }
+}
