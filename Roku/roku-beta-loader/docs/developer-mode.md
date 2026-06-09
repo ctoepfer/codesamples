@@ -1,6 +1,8 @@
 # Roku Developer Mode
 
-Developer Mode is enabled manually on the Roku device with the Roku remote. This tool only guides the tester; it does not automate or bypass Roku's Developer Mode process.
+Developer Mode is enabled manually on the Roku device with the Roku remote. This
+tool only guides the tester; it does not automate or bypass Roku's Developer
+Mode process.
 
 General flow:
 
@@ -10,4 +12,6 @@ General flow:
 4. Keep the username as `rokudev` unless your app config says otherwise.
 5. Restart the Roku when prompted.
 
-After Developer Mode is enabled, the developer installer is available on the Roku device's local IP address. The computer running this tool must be able to reach that IP on the local network.
+After Developer Mode is enabled, the developer installer is available on the
+Roku device's local IP address. The computer running this tool must be able to
+reach that IP on the local network.

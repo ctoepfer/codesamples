@@ -3,5 +3,7 @@
   "releaseManifestUrl": "https://iokom.com/downloads/roku/beta/latest.json",
   "supportUrl": "https://iokom.com/support",
   "expectedManifestTitle": "Iokom Signage",
-  "defaultUsername": "rokudev"
+  "defaultUsername": "rokudev",
+  "developerModeIntro": "",
+  "postInstallMessage": "Open the beta channel on your Roku and follow the pairing instructions from your Iokom account."
 }

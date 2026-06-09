@@ -1,8 +1,11 @@
 # Roku Beta Loader
 
-Roku Beta Loader is a small, configurable utility for helping beta testers sideload a Roku channel zip before the channel is publicly listed.
+Roku Beta Loader is a small, configurable utility for helping beta testers
+sideload a Roku channel zip before the channel is publicly listed.
 
-The MVP is a CLI-first Go application. The core networking and validation code is isolated so a Wails desktop UI can be added later without rewriting the workflow.
+The MVP is a CLI-first Go application. The core networking and validation code
+is isolated so a Wails desktop UI can be added later without rewriting the
+workflow.
 
 ## MVP Workflow
 
@@ -19,9 +22,14 @@ The MVP is a CLI-first Go application. The core networking and validation code i
 
 ## Roku Developer Mode Limitation
 
-This project does not enable Developer Mode for the user and must not try to bypass Roku's process. The tester enables Developer Mode manually with the Roku remote, accepts Roku's prompts, and sets a developer web server password on the device.
+This project does not enable Developer Mode for the user and must not try to
+bypass Roku's process. The tester enables Developer Mode manually with the Roku
+remote, accepts Roku's prompts, and sets a developer web server password on the
+device.
 
-The default developer username is usually `rokudev`. Installing a beta channel replaces any existing sideloaded app because Roku allows only one sideloaded channel at a time.
+The default developer username is usually `rokudev`. Installing a beta channel
+replaces any existing sideloaded app because Roku allows only one sideloaded
+channel at a time.
 
 ## CLI
 
@@ -49,11 +57,19 @@ go build ./cmd/roku-beta-loader
   "releaseManifestUrl": "https://example.com/roku/beta/latest.json",
   "supportUrl": "https://example.com/support",
   "expectedManifestTitle": "Example Roku Channel",
-  "defaultUsername": "rokudev"
+  "defaultUsername": "rokudev",
+  "developerModeIntro": "",
+  "postInstallMessage": ""
 }
 ```
 
-Application-specific values live in JSON. Roku behavior belongs under `internal/roku`, release and checksum behavior are reusable, and the future desktop UI should call these same packages.
+Application-specific values live in JSON. Roku behavior belongs under
+`internal/roku`, release and checksum behavior are reusable, and the future
+desktop UI should call these same packages.
+
+`developerModeIntro` and `postInstallMessage` are optional app-specific guidance
+strings. They are intended for CLI/UI copy that should vary by beta program
+without being hardcoded in Go source.
 
 ## Release Manifest
 
@@ -72,7 +88,8 @@ Application-specific values live in JSON. Roku behavior belongs under `internal/
 }
 ```
 
-`title` is optional for generic manifests, but when present it can be checked against `expectedManifestTitle` to catch misconfigured URLs.
+`title` is optional for generic manifests, but when present it can be checked
+against `expectedManifestTitle` to catch misconfigured URLs.
 
 ## Troubleshooting Themes
 
@@ -85,4 +102,7 @@ Application-specific values live in JSON. Roku behavior belongs under `internal/
 
 ## Example: Iokom Signage
 
-An Iokom Signage example config is included at `configs/iokom-signage.example.json`. It is only an example of how an app-specific beta channel can provide its own manifest URL, support URL, expected manifest title, and developer username.
+An Iokom Signage example config is included at
+`configs/iokom-signage.example.json`. It is only an example of how an
+app-specific beta channel can provide its own manifest URL, support URL,
+expected manifest title, developer username, and post-install guidance.

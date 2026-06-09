@@ -15,6 +15,8 @@ type Config struct {
 	SupportURL            string `json:"supportUrl"`
 	ExpectedManifestTitle string `json:"expectedManifestTitle"`
 	DefaultUsername       string `json:"defaultUsername"`
+	DeveloperModeIntro    string `json:"developerModeIntro"`
+	PostInstallMessage    string `json:"postInstallMessage"`
 }
 
 func Load(path string) (Config, error) {

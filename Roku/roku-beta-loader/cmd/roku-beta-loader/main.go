@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -24,27 +25,58 @@ func main() {
 }
 
 func run(args []string) error {
+	return runWithDeps(args, defaultDeps(os.Stdout))
+}
+
+type appDeps struct {
+	stdout       io.Writer
+	fetch        func(context.Context, *http.Client, string) (releases.Manifest, error)
+	download     func(context.Context, *http.Client, string, string) (string, error)
+	verify       func(string, string) error
+	discover     func(context.Context) ([]discovery.Device, error)
+	installer    roku.Installer
+	manifestHTTP *http.Client
+	downloadHTTP *http.Client
+}
+
+func defaultDeps(stdout io.Writer) appDeps {
+	return appDeps{
+		stdout:       stdout,
+		fetch:        releases.Fetch,
+		download:     releases.DownloadZip,
+		verify:       checksum.VerifyFileSHA256,
+		discover:     discovery.Discover,
+		installer:    roku.HTTPInstaller{},
+		manifestHTTP: http.DefaultClient,
+		downloadHTTP: http.DefaultClient,
+	}
+}
+
+func runWithDeps(args []string, deps appDeps) error {
+	if deps.stdout == nil {
+		deps.stdout = io.Discard
+	}
 	if len(args) == 0 {
-		return usage()
+		return usage(deps.stdout)
 	}
 
 	switch args[0] {
 	case "config":
-		return runConfig(args[1:])
+		return runConfig(args[1:], deps)
 	case "release":
-		return runRelease(args[1:])
+		return runRelease(args[1:], deps)
 	case "roku":
-		return runRoku(args[1:])
+		return runRoku(args[1:], deps)
 	case "install":
-		return runInstall(args[1:])
+		return runInstall(args[1:], deps)
 	case "help", "-h", "--help":
-		return usage()
+		return usage(deps.stdout)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%w", args[0], errUsage)
 	}
 }
 
-func runConfig(args []string) error {
+func runConfig(args []string, deps appDeps) error {
 	if len(args) == 0 || args[0] != "validate" {
 		return errors.New("usage: roku-beta-loader config validate --config PATH")
 	}
@@ -57,11 +89,11 @@ func runConfig(args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Config OK: %s\n", cfg.AppName)
+	fmt.Fprintf(deps.stdout, "Config OK: %s\n", cfg.AppName)
 	return nil
 }
 
-func runRelease(args []string) error {
+func runRelease(args []string, deps appDeps) error {
 	if len(args) == 0 || args[0] != "check" {
 		return errors.New("usage: roku-beta-loader release check --config PATH")
 	}
@@ -76,39 +108,52 @@ func runRelease(args []string) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	manifest, err := releases.Fetch(ctx, http.DefaultClient, cfg.ReleaseManifestURL)
+	manifest, err := deps.fetch(ctx, deps.manifestHTTP, cfg.ReleaseManifestURL)
 	if err != nil {
-		return err
+		return withSupport(err, cfg)
 	}
 	if err := checkManifestTitle(cfg, manifest); err != nil {
 		return err
 	}
-	fmt.Printf("Release OK: %s %s build %d\n", cfg.AppName, manifest.Version, manifest.Build)
-	fmt.Printf("Zip: %s\n", manifest.ZipURL)
+	fmt.Fprintf(deps.stdout, "Release OK: %s %s build %d\n", cfg.AppName, manifest.Version, manifest.Build)
+	fmt.Fprintf(deps.stdout, "Zip: %s\n", manifest.ZipURL)
 	return nil
 }
 
-func runRoku(args []string) error {
+func runRoku(args []string, deps appDeps) error {
 	if len(args) == 0 || args[0] != "discover" {
-		return errors.New("usage: roku-beta-loader roku discover")
+		return errors.New("usage: roku-beta-loader roku discover [--config PATH]")
+	}
+	fs := flag.NewFlagSet("roku discover", flag.ContinueOnError)
+	configPath := fs.String("config", "", "Optional path to JSON config for support URL")
+	if err := fs.Parse(args[1:]); err != nil {
+		return err
+	}
+	var cfg config.Config
+	if *configPath != "" {
+		loaded, err := loadConfig(*configPath)
+		if err != nil {
+			return err
+		}
+		cfg = loaded
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
-	devices, err := discovery.Discover(ctx)
+	devices, err := deps.discover(ctx)
 	if err != nil {
-		return err
+		return withSupport(err, cfg)
 	}
 	if len(devices) == 0 {
-		fmt.Println("No Roku devices found. Try manual IP entry, and check same-network, VPN, firewall, and guest Wi-Fi settings.")
+		fmt.Fprintln(deps.stdout, supportLine("No Roku devices found. Try manual IP entry, and check same-network, VPN, firewall, and guest Wi-Fi settings.", cfg))
 		return nil
 	}
 	for _, device := range devices {
-		fmt.Printf("%s\t%s\t%s\n", device.IP, device.USN, device.Location)
+		fmt.Fprintf(deps.stdout, "%s\t%s\t%s\n", device.IP, device.USN, device.Location)
 	}
 	return nil
 }
 
-func runInstall(args []string) error {
+func runInstall(args []string, deps appDeps) error {
 	fs := flag.NewFlagSet("install", flag.ContinueOnError)
 	configPath := fs.String("config", "", "Path to JSON config")
 	ip := fs.String("ip", "", "Roku IP address")
@@ -127,36 +172,41 @@ func runInstall(args []string) error {
 	if *password == "" {
 		return errors.New("Roku developer password is required. This tool does not store passwords by default")
 	}
+	if cfg.DeveloperModeIntro != "" {
+		fmt.Fprintln(deps.stdout, cfg.DeveloperModeIntro)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	manifest, err := releases.Fetch(ctx, http.DefaultClient, cfg.ReleaseManifestURL)
+	manifest, err := deps.fetch(ctx, deps.manifestHTTP, cfg.ReleaseManifestURL)
 	if err != nil {
-		return err
+		return withSupport(err, cfg)
 	}
 	if err := checkManifestTitle(cfg, manifest); err != nil {
 		return err
 	}
-	zipPath, err := releases.DownloadZip(ctx, http.DefaultClient, manifest.ZipURL, *outDir)
+	zipPath, err := deps.download(ctx, deps.downloadHTTP, manifest.ZipURL, *outDir)
 	if err != nil {
-		return err
+		return withSupport(err, cfg)
 	}
-	if err := checksum.VerifyFileSHA256(zipPath, manifest.SHA256); err != nil {
-		return err
+	if err := deps.verify(zipPath, manifest.SHA256); err != nil {
+		return withSupport(err, cfg)
 	}
 
-	installer := roku.HTTPInstaller{}
-	err = installer.Install(ctx, roku.Target{
+	err = deps.installer.Install(ctx, roku.Target{
 		IP:       *ip,
 		Username: cfg.DefaultUsername,
 		Password: *password,
 	}, zipPath)
 	if err != nil {
-		return err
+		return withSupport(err, cfg)
 	}
-	fmt.Printf("Install complete: %s %s\n", cfg.AppName, manifest.Version)
-	fmt.Println("The beta replaced any previous sideloaded channel on this Roku.")
+	fmt.Fprintf(deps.stdout, "Install complete: %s %s\n", cfg.AppName, manifest.Version)
+	fmt.Fprintln(deps.stdout, "The beta replaced any previous sideloaded channel on this Roku.")
+	if cfg.PostInstallMessage != "" {
+		fmt.Fprintln(deps.stdout, cfg.PostInstallMessage)
+	}
 	return nil
 }
 
@@ -179,11 +229,25 @@ func checkManifestTitle(cfg config.Config, manifest releases.Manifest) error {
 
 var errUsage = errors.New("usage: roku-beta-loader <config|release|roku|install>")
 
-func usage() error {
-	fmt.Println(`Usage:
+func usage(w io.Writer) error {
+	fmt.Fprintln(w, `Usage:
   roku-beta-loader config validate --config PATH
   roku-beta-loader release check --config PATH
   roku-beta-loader roku discover
   roku-beta-loader install --config PATH --ip ROKU_IP --password PASSWORD`)
 	return nil
+}
+
+func withSupport(err error, cfg config.Config) error {
+	if cfg.SupportURL == "" {
+		return err
+	}
+	return fmt.Errorf("%w\nFor help, see: %s", err, cfg.SupportURL)
+}
+
+func supportLine(message string, cfg config.Config) string {
+	if cfg.SupportURL == "" {
+		return message
+	}
+	return message + "\nFor help, see: " + cfg.SupportURL
 }

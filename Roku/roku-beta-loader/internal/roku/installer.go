@@ -24,8 +24,29 @@ type Target struct {
 	Password string
 }
 
+type InstallerOptions struct {
+	Port           string
+	Path           string
+	SubmitField    string
+	SubmitValue    string
+	ArchiveField   string
+	UploadFilename string
+}
+
+func DefaultInstallerOptions() InstallerOptions {
+	return InstallerOptions{
+		Port:           "80",
+		Path:           "/plugin_install",
+		SubmitField:    "mysubmit",
+		SubmitValue:    "Install",
+		ArchiveField:   "archive",
+		UploadFilename: "channel.zip",
+	}
+}
+
 type HTTPInstaller struct {
-	Client *http.Client
+	Client  *http.Client
+	Options InstallerOptions
 }
 
 func (i HTTPInstaller) Install(ctx context.Context, target Target, zipPath string) error {
@@ -33,7 +54,7 @@ func (i HTTPInstaller) Install(ctx context.Context, target Target, zipPath strin
 		return errors.New("Roku IP address is required")
 	}
 	if strings.TrimSpace(target.Username) == "" {
-		target.Username = "rokudev"
+		return errors.New("Roku developer username is required")
 	}
 	if target.Password == "" {
 		return errors.New("Roku developer password is required and is not stored by this tool")
@@ -43,13 +64,14 @@ func (i HTTPInstaller) Install(ctx context.Context, target Target, zipPath strin
 	if client == nil {
 		client = &http.Client{Timeout: 2 * time.Minute}
 	}
+	options := i.Options.withDefaults()
 
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
-	if err := writer.WriteField("mysubmit", "Install"); err != nil {
+	if err := writer.WriteField(options.SubmitField, options.SubmitValue); err != nil {
 		return fmt.Errorf("prepare install request: %w", err)
 	}
-	part, err := writer.CreateFormFile("archive", "channel.zip")
+	part, err := writer.CreateFormFile(options.ArchiveField, options.UploadFilename)
 	if err != nil {
 		return fmt.Errorf("prepare zip upload: %w", err)
 	}
@@ -68,7 +90,7 @@ func (i HTTPInstaller) Install(ctx context.Context, target Target, zipPath strin
 		return fmt.Errorf("finalize install request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+net.JoinHostPort(target.IP, "80")+"/plugin_install", &body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+net.JoinHostPort(target.IP, options.Port)+options.Path, &body)
 	if err != nil {
 		return fmt.Errorf("create install request: %w", err)
 	}
@@ -91,6 +113,29 @@ func (i HTTPInstaller) Install(ctx context.Context, target Target, zipPath strin
 		return fmt.Errorf("Roku install failed: device returned %s", resp.Status)
 	}
 	return nil
+}
+
+func (o InstallerOptions) withDefaults() InstallerOptions {
+	defaults := DefaultInstallerOptions()
+	if o.Port == "" {
+		o.Port = defaults.Port
+	}
+	if o.Path == "" {
+		o.Path = defaults.Path
+	}
+	if o.SubmitField == "" {
+		o.SubmitField = defaults.SubmitField
+	}
+	if o.SubmitValue == "" {
+		o.SubmitValue = defaults.SubmitValue
+	}
+	if o.ArchiveField == "" {
+		o.ArchiveField = defaults.ArchiveField
+	}
+	if o.UploadFilename == "" {
+		o.UploadFilename = defaults.UploadFilename
+	}
+	return o
 }
 
 func FriendlyInstallError(err error) error {
