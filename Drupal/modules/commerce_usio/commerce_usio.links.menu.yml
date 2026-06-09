@@ -1,0 +1,6 @@
+commerce_usio.settings:
+  title: 'USIO settings'
+  description: 'Configure global settings for the USIO payment gateway module.'
+  parent: commerce.admin_commerce
+  route_name: commerce_usio.settings
+  weight: 100

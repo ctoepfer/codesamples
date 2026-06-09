@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the Commerce USIO module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function commerce_usio_requirements($phase) {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    if (!class_exists('GuzzleHttp\Client')) {
+      $requirements['commerce_usio_guzzle'] = [
+        'title' => t('Commerce USIO: Guzzle HTTP client'),
+        'value' => t('Missing'),
+        'description' => t('The Guzzle HTTP client library is required. It ships with Drupal core.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+
+  return $requirements;
+}
