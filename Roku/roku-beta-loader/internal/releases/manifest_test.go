@@ -7,7 +7,7 @@ import (
 
 func TestDecodeManifest(t *testing.T) {
 	body := `{
-		"title": "Iokom Signage",
+		"title": "Example Roku Channel",
 		"channel": "beta",
 		"version": "0.1.0-beta.1",
 		"build": 1,

@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	ssdpAddr       = "239.255.255.250:1900"
-	rokuSearchST   = "roku:ecp"
+	ssdpAddr        = "239.255.255.250:1900"
+	rokuSearchST    = "roku:ecp"
 	defaultWaitTime = 3 * time.Second
 )
 
@@ -61,7 +61,7 @@ func Discover(ctx context.Context) ([]Device, error) {
 	seen := map[string]Device{}
 	buf := make([]byte, 8192)
 	for {
-		n, err := conn.Read(buf)
+		n, _, err := conn.ReadFrom(buf)
 		if err != nil {
 			var netErr net.Error
 			if errors.As(err, &netErr) && netErr.Timeout() {

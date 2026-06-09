@@ -29,10 +29,10 @@ From this directory:
 
 ```sh
 go test ./...
-go run ./cmd/roku-beta-loader config validate --config configs/iokom-signage.example.json
-go run ./cmd/roku-beta-loader release check --config configs/iokom-signage.example.json
+go run ./cmd/roku-beta-loader config validate --config config.example.json
+go run ./cmd/roku-beta-loader release check --config config.example.json
 go run ./cmd/roku-beta-loader roku discover
-go run ./cmd/roku-beta-loader install --config configs/iokom-signage.example.json --ip 192.168.1.123 --password YOUR_DEV_PASSWORD
+go run ./cmd/roku-beta-loader install --config config.example.json --ip 192.168.1.123 --password YOUR_DEV_PASSWORD
 ```
 
 Build a local binary:
@@ -45,10 +45,10 @@ go build ./cmd/roku-beta-loader
 
 ```json
 {
-  "appName": "Iokom Signage Beta",
-  "releaseManifestUrl": "https://iokom.com/downloads/roku/beta/latest.json",
-  "supportUrl": "https://iokom.com/support",
-  "expectedManifestTitle": "Iokom Signage",
+  "appName": "Example Roku Channel Beta",
+  "releaseManifestUrl": "https://example.com/roku/beta/latest.json",
+  "supportUrl": "https://example.com/support",
+  "expectedManifestTitle": "Example Roku Channel",
   "defaultUsername": "rokudev"
 }
 ```
@@ -59,12 +59,12 @@ Application-specific values live in JSON. Roku behavior belongs under `internal/
 
 ```json
 {
-  "title": "Iokom Signage",
+  "title": "Example Roku Channel",
   "channel": "beta",
   "version": "0.1.0-beta.1",
   "build": 1,
   "published_at": "2026-06-09T10:00:00-07:00",
-  "zip_url": "https://iokom.com/downloads/roku/beta/iokom-signage-beta-0.1.0.zip",
+  "zip_url": "https://example.com/roku/beta/example-roku-channel-0.1.0-beta.1.zip",
   "sha256": "REPLACE_WITH_SHA256",
   "notes": [
     "Initial beta release"
@@ -82,3 +82,7 @@ Application-specific values live in JSON. Roku behavior belongs under `internal/
 - A VPN, firewall, or guest Wi-Fi network is blocking discovery.
 - The download failed or the checksum does not match.
 - Another sideloaded app was replaced by the beta install.
+
+## Example: Iokom Signage
+
+An Iokom Signage example config is included at `configs/iokom-signage.example.json`. It is only an example of how an app-specific beta channel can provide its own manifest URL, support URL, expected manifest title, and developer username.

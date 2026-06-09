@@ -1,6 +1,6 @@
 {
-  "appName": "Example Roku Beta",
-  "releaseManifestUrl": "https://example.com/downloads/roku/beta/latest.json",
+  "appName": "Example Roku Channel Beta",
+  "releaseManifestUrl": "https://example.com/roku/beta/latest.json",
   "supportUrl": "https://example.com/support",
   "expectedManifestTitle": "Example Roku Channel",
   "defaultUsername": "rokudev"
