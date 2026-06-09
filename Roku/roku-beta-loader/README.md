@@ -40,7 +40,10 @@ go test ./...
 go run ./cmd/roku-beta-loader config validate --config config.example.json
 go run ./cmd/roku-beta-loader release check --config config.example.json
 go run ./cmd/roku-beta-loader roku discover
-go run ./cmd/roku-beta-loader install --config config.example.json --ip 192.168.1.123 --password YOUR_DEV_PASSWORD
+go run ./cmd/roku-beta-loader install \
+  --config config.example.json \
+  --ip 192.168.1.123 \
+  --password YOUR_DEV_PASSWORD
 ```
 
 Build a local binary:

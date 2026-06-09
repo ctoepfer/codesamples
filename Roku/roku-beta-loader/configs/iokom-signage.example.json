@@ -5,5 +5,5 @@
   "expectedManifestTitle": "Iokom Signage",
   "defaultUsername": "rokudev",
   "developerModeIntro": "",
-  "postInstallMessage": "Open the beta channel on your Roku and follow the pairing instructions from your Iokom account."
+  "postInstallMessage": "Open the beta channel on your Roku and pair it from your Iokom account."
 }
