@@ -68,6 +68,31 @@ func TestValidateExampleConfigs(t *testing.T) {
 	}
 }
 
+func TestOptionalGUIFields(t *testing.T) {
+	cfg := Config{
+		AppName:            "Beta",
+		ReleaseManifestURL: "https://example.com/latest.json",
+		DefaultUsername:    "rokudev",
+		DeveloperModeImage: "/path/to/image.png",
+		ManualIPHelp:       "Open Settings > About to find your IP.",
+		InstallButtonLabel: "Install Now",
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("optional GUI fields should not affect validation: %v", err)
+	}
+}
+
+func TestInstallButtonLabelOptional(t *testing.T) {
+	cfg := Config{
+		AppName:            "Beta",
+		ReleaseManifestURL: "https://example.com/latest.json",
+		DefaultUsername:    "rokudev",
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("installButtonLabel should be optional: %v", err)
+	}
+}
+
 func TestValidateRequiresHTTPSManifest(t *testing.T) {
 	cfg := Config{
 		AppName:            "Beta",

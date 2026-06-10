@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brewconvert"
+version = "0.1.0"
+description = "Brewing recipe conversion library and CLI for BeerXML, BeerSmith BSMX, and future brewing formats."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Charles Toepfer"}]
+dependencies = []
+
+[project.scripts]
+brewconvert = "brewconvert.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

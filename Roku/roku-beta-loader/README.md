@@ -52,6 +52,32 @@ Build a local binary:
 go build ./cmd/roku-beta-loader
 ```
 
+## Building Releases
+
+Cross-compile binaries for Linux, Windows, and macOS (amd64 and arm64) into
+`dist/`. On Linux or macOS:
+
+```sh
+scripts/build.sh                       # full platform matrix
+scripts/build.sh linux/amd64           # a single target
+VERSION=v1.0.0 scripts/build.sh        # stamp an explicit version
+```
+
+On Windows:
+
+```powershell
+pwsh scripts/build.ps1
+pwsh scripts/build.ps1 -Platforms windows/amd64,darwin/arm64
+```
+
+Both scripts honor `CGO_ENABLED=0`, stamp the build with `-X main.version`
+(defaulting to `git describe`, else `dev`), and write a `SHA256SUMS` file
+alongside the binaries. Check the stamped version with:
+
+```sh
+roku-beta-loader version
+```
+
 ## Configuration
 
 ```json

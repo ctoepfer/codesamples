@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "recipes": [
+    {
+      "name": "BeerJSON Pale Ale",
+      "type": "All Grain",
+      "author": "Test Brewer",
+      "batch_size": {"value": 20, "unit": "l"},
+      "boil": {"duration": {"value": 60, "unit": "min"}},
+      "efficiency": {"brewhouse": {"value": 72, "unit": "%"}},
+      "original_gravity": {"value": 1.052, "unit": "sg"},
+      "final_gravity": {"value": 1.012, "unit": "sg"},
+      "ibu_estimate": {"value": 38, "unit": "IBUs"},
+      "ingredients": {
+        "fermentable_additions": [{"name": "Pale Malt", "type": "Grain", "amount": {"value": 4.5, "unit": "kg"}, "yield": {"value": 80, "unit": "%"}, "color": {"value": 3, "unit": "SRM"}}],
+        "hop_additions": [{"name": "Cascade", "amount": {"value": 0.05, "unit": "kg"}, "alpha_acid": {"value": 6.0, "unit": "%"}, "form": "Pellet", "timing": {"use": "Boil", "time": {"value": 60, "unit": "min"}}}],
+        "culture_additions": [{"name": "US-05", "producer": "Fermentis", "type": "Ale", "form": "Dry", "attenuation": {"value": 78, "unit": "%"}}]
+      },
+      "mash": {"mash_steps": [{"name": "Saccharification", "type": "Infusion", "step_time": {"value": 60, "unit": "min"}, "step_temperature": {"value": 67, "unit": "C"}}]}
+    }
+  ]
+}

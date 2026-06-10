@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roku Beta Loader</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Step 1: Load config -->
+    <div id="screen-config" class="screen active">
+      <div class="hero">
+        <h1>Roku Beta Loader</h1>
+        <p class="subtitle">Install a beta channel on your Roku TV or player.</p>
+      </div>
+      <div class="card">
+        <p>To get started, open the configuration file you received.</p>
+        <button id="btn-open-config" class="btn btn-primary btn-large">Open Config File</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Developer Mode help -->
+    <div id="screen-devmode" class="screen">
+      <h2 id="app-name-heading"></h2>
+      <div class="card">
+        <h3>First: Enable Developer Mode on your Roku</h3>
+        <div id="devmode-intro" class="devmode-text"></div>
+        <img id="devmode-image" class="devmode-img" src="" alt="Developer Mode instructions" style="display:none">
+        <p class="tip">After enabling Developer Mode, your Roku will restart. Then come back here.</p>
+        <button id="btn-ready" class="btn btn-primary btn-large">My Roku is Ready</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Device discovery -->
+    <div id="screen-discover" class="screen">
+      <h2 id="app-name-discover"></h2>
+      <div class="card">
+        <div id="discover-status" class="status-msg">
+          <span class="spinner"></span> Looking for Roku devices&hellip;
+        </div>
+        <div id="device-list" style="display:none">
+          <p>Select your Roku:</p>
+          <div id="devices"></div>
+          <details id="manual-ip-section" class="manual-ip">
+            <summary>I don&rsquo;t see my Roku</summary>
+            <div class="manual-ip-body">
+              <div id="manual-ip-help" class="tip"></div>
+              <label for="input-ip">Enter Roku IP address:</label>
+              <input type="text" id="input-ip" placeholder="e.g. 192.168.1.100" autocomplete="off" spellcheck="false">
+              <button id="btn-use-manual-ip" class="btn btn-secondary">Use this IP</button>
+            </div>
+          </details>
+        </div>
+        <div id="discover-error" class="error-msg" style="display:none">
+          <p>We could not find your Roku.</p>
+          <p class="tip">Make sure your computer and Roku are on the same Wi-Fi network. Disconnect from any VPN. Avoid guest networks.</p>
+          <details id="manual-ip-fallback" class="manual-ip">
+            <summary>Enter IP manually</summary>
+            <div class="manual-ip-body">
+              <div id="manual-ip-help-fallback" class="tip"></div>
+              <label for="input-ip-fallback">Roku IP address:</label>
+              <input type="text" id="input-ip-fallback" placeholder="e.g. 192.168.1.100" autocomplete="off" spellcheck="false">
+              <button id="btn-use-fallback-ip" class="btn btn-secondary">Use this IP</button>
+            </div>
+          </details>
+          <button id="btn-retry-discover" class="btn btn-ghost">Try Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Password entry + install -->
+    <div id="screen-install" class="screen">
+      <h2 id="app-name-install"></h2>
+      <div class="card">
+        <p>Roku selected: <strong id="selected-device-label"></strong></p>
+        <label for="input-password">Roku developer password:</label>
+        <div class="password-wrap">
+          <input type="password" id="input-password" placeholder="Enter password" autocomplete="off">
+          <button type="button" id="btn-toggle-password" class="btn-icon" aria-label="Show password">&#128065;</button>
+        </div>
+        <div id="install-status" class="status-msg" style="display:none"></div>
+        <button id="btn-install" class="btn btn-primary btn-large"></button>
+        <button id="btn-back-to-discover" class="btn btn-ghost">&#8592; Choose a different Roku</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Success -->
+    <div id="screen-success" class="screen">
+      <div class="result-icon success-icon">&#10003;</div>
+      <h2>Done!</h2>
+      <p id="success-version" class="subtitle"></p>
+      <div id="post-install-msg" class="card" style="display:none"></div>
+      <button id="btn-install-another" class="btn btn-ghost">Install on another Roku</button>
+    </div>
+
+    <!-- Step 6: Failure -->
+    <div id="screen-failure" class="screen">
+      <div class="result-icon failure-icon">&#10007;</div>
+      <h2>Something went wrong</h2>
+      <p id="failure-msg" class="error-detail"></p>
+      <button id="btn-try-again" class="btn btn-primary btn-large">Try Again</button>
+    </div>
+
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

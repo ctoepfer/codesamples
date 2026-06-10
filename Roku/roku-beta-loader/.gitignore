@@ -1,0 +1,15 @@
+# Local environment / secrets (never commit)
+roku-env
+.env
+.env.local
+*.local
+
+# Build artifacts
+/roku-beta-loader
+/dist/
+*.zip
+
+# Wails GUI build output
+/build/
+/frontend/dist/
+/frontend/node_modules/

@@ -69,6 +69,9 @@ func runWithDeps(args []string, deps appDeps) error {
 		return runRoku(args[1:], deps)
 	case "install":
 		return runInstall(args[1:], deps)
+	case "version", "--version", "-v":
+		fmt.Fprintln(deps.stdout, "roku-beta-loader "+version)
+		return nil
 	case "help", "-h", "--help":
 		return usage(deps.stdout)
 	default:
@@ -226,6 +229,10 @@ func checkManifestTitle(cfg config.Config, manifest releases.Manifest) error {
 	}
 	return nil
 }
+
+// version is "dev" for local builds and is overridden at release time via the
+// build scripts with -ldflags "-X main.version=...".
+var version = "dev"
 
 var errUsage = errors.New("usage: roku-beta-loader <config|release|roku|install>")
 

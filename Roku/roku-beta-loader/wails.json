@@ -1,0 +1,17 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "roku-beta-loader-gui",
+  "outputfilename": "roku-beta-loader-gui",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "wailsjsdir": "./frontend",
+  "version": "2",
+  "info": {
+    "productName": "Roku Beta Loader",
+    "copyright": "",
+    "comments": ""
+  },
+  "build:tags": "wails"
+}

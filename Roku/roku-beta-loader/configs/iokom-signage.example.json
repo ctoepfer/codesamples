@@ -5,5 +5,8 @@
   "expectedManifestTitle": "Iokom Signage",
   "defaultUsername": "rokudev",
   "developerModeIntro": "",
-  "postInstallMessage": "Open the beta channel on your Roku and pair it from your Iokom account."
+  "developerModeImage": "",
+  "postInstallMessage": "Open the beta channel on your Roku and pair it from your Iokom account.",
+  "installButtonLabel": "Install Beta",
+  "manualIpHelp": "On your Roku, go to Settings > About to find the IP address."
 }

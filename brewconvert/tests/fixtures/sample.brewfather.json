@@ -1,0 +1,19 @@
+{
+  "name": "Brewfather Pale Ale",
+  "author": "Test Brewer",
+  "type": "All Grain",
+  "batchSize": 20,
+  "boilSize": 25,
+  "boilTime": 60,
+  "efficiency": 73,
+  "og": 1.050,
+  "fg": 1.011,
+  "ibu": 36,
+  "abv": 5.1,
+  "color": 6,
+  "style": {"name": "American Pale Ale"},
+  "fermentables": [{"name": "Pale Malt", "amount": 4.5, "unit": "kg", "type": "Grain", "yield": 80, "color": 3}],
+  "hops": [{"name": "Cascade", "amount": 0.05, "unit": "kg", "alpha": 6.0, "use": "Boil", "time": 60, "form": "Pellet"}],
+  "yeasts": [{"name": "US-05", "laboratory": "Fermentis", "type": "Ale", "form": "Dry", "attenuation": 78}],
+  "mash": {"steps": [{"name": "Saccharification", "type": "Infusion", "stepTime": 60, "stepTemp": 67}]}
+}

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<RECIPES>
+  <RECIPE>
+    <NAME>Domo Arigato Hoppy Japanese Rice Lager - L55 Kanpai - 90C Whirlpool</NAME>
+    <VERSION>1</VERSION>
+    <DATE>09 Jun 26</DATE>
+    <TYPE>All Grain</TYPE>
+    <BREWER>Charles Toepfer</BREWER>
+    <BATCH_SIZE>19.003</BATCH_SIZE>
+    <BOIL_SIZE>87.064</BOIL_SIZE>
+    <BOIL_TIME>60</BOIL_TIME>
+    <EFFICIENCY>65</EFFICIENCY>
+    <EST_OG>1.042</EST_OG>
+    <EST_FG>1.007</EST_FG>
+    <IBU>27.8</IBU>
+    <EST_ABV>4.6</EST_ABV>
+    <CALORIES>137</CALORIES>
+    <EST_COLOR>2.774984358036</EST_COLOR>
+    <NOTES>Modern hoppy Japanese-style rice lager based on the July/August 2022 Zymurgy recipe. This version uses a 90 C (194 F) 10-minute whirlpool steep. Mash 70 min at 64 C with mash pH 5.2-5.5. Sparge at 75-78 C if sparging. For Imperial L55 Kanpai, ferment at 12-14 C (54-58 F). The original recipe starts at 10 C and increases 1 C per day, but L55 is published for 12-14 C and is sensitive to pitch rate, temperature, and dissolved oxygen. Add dry hops when SG is below 1.015. After 3 days with no gravity change, cold crash near 0 C and lager 1-2 weeks. Carbonate to 2.4 volumes CO2. Water target: Ca 50 ppm, Mg &lt;10, Na &lt;10, SO4 60, Cl 40, HCO3 &lt;10. Vic Secret alpha acid was not specified in the source recipe; this file uses 16.0% as a placeholder. Adjust hop alpha acids to match your packages before brewing. Yeast switched to Imperial Yeast L55 Kanpai. Misc/extras use Grainfather-friendly DISPLAY_AMOUNT formatting based on a working import sample.</NOTES>
+    <IBU_METHOD>Tinseth</IBU_METHOD>
+    <STYLE>
+      <NAME>International Pale Lager</NAME>
+      <VERSION>1</VERSION>
+      <CATEGORY_NUMBER>2</CATEGORY_NUMBER>
+      <STYLE_LETTER>A</STYLE_LETTER>
+      <STYLE_GUIDE>BJCP</STYLE_GUIDE>
+      <TYPE>Lager</TYPE>
+      <OG_MIN>1.042</OG_MIN>
+      <OG_MAX>1.05</OG_MAX>
+      <FG_MIN>1.008</FG_MIN>
+      <FG_MAX>1.012</FG_MAX>
+      <IBU_MIN>18</IBU_MIN>
+      <IBU_MAX>25</IBU_MAX>
+      <COLOR_MIN>2</COLOR_MIN>
+      <COLOR_MAX>6</COLOR_MAX>
+    </STYLE>
+    <WATERS/>
+    <FERMENTABLES>
+      <FERMENTABLE>
+        <NAME>German Pilsner Malt</NAME>
+        <VERSION>1</VERSION>
+        <TYPE>Grain</TYPE>
+        <AMOUNT>2.499</AMOUNT>
+        <YIELD>80.999264292206</YIELD>
+        <COLOR>1.8</COLOR>
+      </FERMENTABLE>
+      <FERMENTABLE>
+        <NAME>Flaked Rice</NAME>
+        <VERSION>1</VERSION>
+        <TYPE>Grain</TYPE>
+        <AMOUNT>1.701</AMOUNT>
+        <YIELD>87.999307569135</YIELD>
+        <COLOR>1</COLOR>
+      </FERMENTABLE>
+    </FERMENTABLES>
+    <HOPS>
+      <HOP>
+        <NAME>Sorachi Ace</NAME>
+        <VERSION>1</VERSION>
+        <ALPHA>11.5</ALPHA>
+        <AMOUNT>0.01</AMOUNT>
+        <USE>Boil</USE>
+        <TIME>60</TIME>
+        <FORM>Pellet</FORM>
+      </HOP>
+      <HOP>
+        <NAME>Vic Secret</NAME>
+        <VERSION>1</VERSION>
+        <ALPHA>16</ALPHA>
+        <AMOUNT>0.01</AMOUNT>
+        <USE>Hop Stand</USE>
+        <TIME>10</TIME>
+        <FORM>Pellet</FORM>
+        <TEMPERATURE>32</TEMPERATURE>
+        <HOP_TEMP>32</HOP_TEMP>
+      </HOP>
+      <HOP>
+        <NAME>Sorachi Ace</NAME>
+        <VERSION>1</VERSION>
+        <ALPHA>11.5</ALPHA>
+        <AMOUNT>0.01</AMOUNT>
+        <USE>Hop Stand</USE>
+        <TIME>10</TIME>
+        <FORM>Pellet</FORM>
+        <TEMPERATURE>32</TEMPERATURE>
+        <HOP_TEMP>32</HOP_TEMP>
+      </HOP>
+      <HOP>
+        <NAME>Vic Secret</NAME>
+        <VERSION>1</VERSION>
+        <ALPHA>16</ALPHA>
+        <AMOUNT>0.02</AMOUNT>
+        <USE>Dry Hop</USE>
+        <TIME>0</TIME>
+        <FORM>Pellet</FORM>
+      </HOP>
+      <HOP>
+        <NAME>Sorachi Ace</NAME>
+        <VERSION>1</VERSION>
+        <ALPHA>11.5</ALPHA>
+        <AMOUNT>0.02</AMOUNT>
+        <USE>Dry Hop</USE>
+        <TIME>0</TIME>
+        <FORM>Pellet</FORM>
+      </HOP>
+    </HOPS>
+    <YEASTS>
+      <YEAST>
+        <NAME>Kanpai</NAME>
+        <VERSION>1</VERSION>
+        <TYPE/>
+        <FORM>Dry</FORM>
+        <AMOUNT>2</AMOUNT>
+        <AMOUNT_IS_WEIGHT>false</AMOUNT_IS_WEIGHT>
+        <DISPLAY_AMOUNT>2 pkg</DISPLAY_AMOUNT>
+        <ATTENUATION>75</ATTENUATION>
+        <LABORATORY/>
+        <PRODUCT_ID/>
+      </YEAST>
+    </YEASTS>
+    <MISCS>
+      <MISC>
+        <NAME>Sodium Bicarbonate (Baking Soda)</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>2.8349492544083E-5</AMOUNT>
+        <DISPLAY_AMOUNT>0.001 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Mash</USE>
+      </MISC>
+      <MISC>
+        <NAME>Calcium Chloride</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.0013891251346601</AMOUNT>
+        <DISPLAY_AMOUNT>0.049 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Mash</USE>
+      </MISC>
+      <MISC>
+        <NAME>Magnesium Sulphate (Epsom Salt)</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.00073708680614617</AMOUNT>
+        <DISPLAY_AMOUNT>0.026 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Mash</USE>
+      </MISC>
+      <MISC>
+        <NAME>Calcium Sulphate (Gypsum)</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.0015308725973805</AMOUNT>
+        <DISPLAY_AMOUNT>0.054 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Mash</USE>
+      </MISC>
+      <MISC>
+        <NAME>Sodium Bicarbonate (Baking Soda)</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>2.8349492544083E-5</AMOUNT>
+        <DISPLAY_AMOUNT>0.001 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Sparge</USE>
+      </MISC>
+      <MISC>
+        <NAME>Calcium Chloride</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.0010772807166752</AMOUNT>
+        <DISPLAY_AMOUNT>0.038 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Sparge</USE>
+      </MISC>
+      <MISC>
+        <NAME>Magnesium Sulphate (Epsom Salt)</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.00059533934342575</AMOUNT>
+        <DISPLAY_AMOUNT>0.021 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Sparge</USE>
+      </MISC>
+      <MISC>
+        <NAME>Calcium Sulphate (Gypsum)</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.0011906786868515</AMOUNT>
+        <DISPLAY_AMOUNT>0.042 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Water Agent</TYPE>
+        <USE>Sparge</USE>
+      </MISC>
+      <MISC>
+        <NAME>Whirlfloc</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.5</AMOUNT>
+        <DISPLAY_AMOUNT>0.5 each</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>false</AMOUNT_IS_WEIGHT>
+        <TIME>10</TIME>
+        <TYPE>Other</TYPE>
+        <USE>Boil</USE>
+      </MISC>
+      <MISC>
+        <NAME>Yeast Nutrient</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.00492892</AMOUNT>
+        <DISPLAY_AMOUNT>1 tsp</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>false</AMOUNT_IS_WEIGHT>
+        <TIME>5</TIME>
+        <TYPE>Other</TYPE>
+        <USE>Boil</USE>
+      </MISC>
+      <MISC>
+        <NAME>Corn Sugar</NAME>
+        <VERSION>1</VERSION>
+        <AMOUNT>0.0039689289561717</AMOUNT>
+        <DISPLAY_AMOUNT>0.14 oz</DISPLAY_AMOUNT>
+        <AMOUNT_IS_WEIGHT>true</AMOUNT_IS_WEIGHT>
+        <TIME>0</TIME>
+        <TYPE>Other</TYPE>
+        <USE>Bottle</USE>
+      </MISC>
+    </MISCS>
+    <MASH>
+      <MASH_STEPS>
+        <MASH_STEP>
+          <NAME>Saccharification</NAME>
+          <VERSION>1</VERSION>
+          <TYPE>Temperature</TYPE>
+          <STEP_TIME>70</STEP_TIME>
+          <STEP_TEMP>64</STEP_TEMP>
+          <RAMP_TIME>0</RAMP_TIME>
+          <END_TEMP>64</END_TEMP>
+        </MASH_STEP>
+        <MASH_STEP>
+          <NAME>Sparge/Mash Out</NAME>
+          <VERSION>1</VERSION>
+          <TYPE>Temperature</TYPE>
+          <STEP_TIME>10</STEP_TIME>
+          <STEP_TEMP>76</STEP_TEMP>
+          <RAMP_TIME>0</RAMP_TIME>
+          <END_TEMP>76</END_TEMP>
+        </MASH_STEP>
+      </MASH_STEPS>
+    </MASH>
+    <FERMENTATION_STAGES>2</FERMENTATION_STAGES>
+    <PRIMARY_AGE>10</PRIMARY_AGE>
+    <PRIMARY_TEMP>12</PRIMARY_TEMP>
+    <SECONDARY_AGE>14</SECONDARY_AGE>
+    <SECONDARY_TEMP>0</SECONDARY_TEMP>
+  </RECIPE>
+</RECIPES>

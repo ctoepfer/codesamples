@@ -5,5 +5,8 @@
   "expectedManifestTitle": "Example Roku Channel",
   "defaultUsername": "rokudev",
   "developerModeIntro": "",
-  "postInstallMessage": ""
+  "developerModeImage": "",
+  "postInstallMessage": "",
+  "installButtonLabel": "",
+  "manualIpHelp": ""
 }
