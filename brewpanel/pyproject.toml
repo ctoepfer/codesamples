@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brewpanel"
+version = "0.1.0"
+description = "Modular brewing control panel: a standardized hardware interface library plus a pluggable GUI, covering the equipment documented in docs/hardware/."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Charles Toepfer"}]
+dependencies = []
+
+[project.optional-dependencies]
+# Per-device transport dependencies. Install only what you actually run against,
+# e.g. `pip install -e ".[tilt,ispindel]"`. See each device's manifest.py for
+# which extra it needs.
+tilt = ["bleak>=0.21"]
+grainfather = ["bleak>=0.21"]
+ispindel = ["aiohttp>=3.9"]
+rapt = ["httpx>=0.27"]
+plaato = ["httpx>=0.27"]
+brewpiless = ["httpx>=0.27"]
+brewblox = ["httpx>=0.27"]
+gui = ["nicegui>=1.4"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+all = [
+    "brewpanel[tilt,grainfather,ispindel,rapt,plaato,brewpiless,brewblox,gui]",
+]
+
+[project.scripts]
+brewpanel = "brewpanel.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

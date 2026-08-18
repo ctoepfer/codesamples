@@ -2,6 +2,7 @@ export namespace gui {
 	
 	export class ConfigResult {
 	    ok: boolean;
+	    path: string;
 	    appName: string;
 	    developerModeIntro: string;
 	    developerModeImage: string;
@@ -17,6 +18,7 @@ export namespace gui {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.ok = source["ok"];
+	        this.path = source["path"];
 	        this.appName = source["appName"];
 	        this.developerModeIntro = source["developerModeIntro"];
 	        this.developerModeImage = source["developerModeImage"];

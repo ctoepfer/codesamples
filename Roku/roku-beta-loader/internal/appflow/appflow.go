@@ -121,7 +121,9 @@ func (s *Service) InstallZip(ctx context.Context, cfg config.Config, ip, passwor
 const InstallTimeout = 3 * time.Minute
 
 // DiscoverTimeout is the default context timeout for device discovery.
-const DiscoverTimeout = 4 * time.Second
+// Allows 3 s for SSDP multicast + 2 s for ECP enrichment, or
+// 3 s for SSDP + up to 4 s for the subnet-scan fallback.
+const DiscoverTimeout = 8 * time.Second
 
 func checkManifestTitle(cfg config.Config, manifest releases.Manifest) error {
 	if cfg.ExpectedManifestTitle == "" || manifest.Title == "" {

@@ -6,6 +6,7 @@ package gui
 // Sensitive internals (manifest URL, checksum, port details) are never exposed.
 type ConfigResult struct {
 	OK                 bool   `json:"ok"`
+	Path               string `json:"path"`
 	AppName            string `json:"appName"`
 	DeveloperModeIntro string `json:"developerModeIntro"`
 	DeveloperModeImage string `json:"developerModeImage"`

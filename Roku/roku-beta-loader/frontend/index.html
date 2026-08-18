@@ -21,9 +21,12 @@
       </div>
     </div>
 
-    <!-- Step 2: Developer Mode help -->
+    <!-- Step 2: Developer Mode help (shown on first config load) -->
     <div id="screen-devmode" class="screen">
-      <h2 id="app-name-heading"></h2>
+      <div class="screen-header">
+        <h2 id="app-name-heading"></h2>
+        <button id="btn-clear-from-devmode" class="btn-text-link">Use different config</button>
+      </div>
       <div class="card">
         <h3>First: Enable Developer Mode on your Roku</h3>
         <div id="devmode-intro" class="devmode-text"></div>
@@ -35,7 +38,10 @@
 
     <!-- Step 3: Device discovery -->
     <div id="screen-discover" class="screen">
-      <h2 id="app-name-discover"></h2>
+      <div class="screen-header">
+        <h2 id="app-name-discover"></h2>
+        <button id="btn-clear-from-discover" class="btn-text-link">Use different config</button>
+      </div>
       <div class="card">
         <div id="discover-status" class="status-msg">
           <span class="spinner"></span> Looking for Roku devices&hellip;
@@ -67,12 +73,24 @@
           </details>
           <button id="btn-retry-discover" class="btn btn-ghost">Try Again</button>
         </div>
+
+        <!-- Collapsible dev-mode reminder for returning users -->
+        <details id="devmode-reminder" class="manual-ip" style="margin-top:16px;display:none">
+          <summary>Developer Mode setup help</summary>
+          <div class="manual-ip-body">
+            <div id="devmode-reminder-intro" class="devmode-text tip"></div>
+            <img id="devmode-reminder-image" class="devmode-img" src="" alt="Developer Mode instructions" style="display:none;margin-top:8px">
+          </div>
+        </details>
       </div>
     </div>
 
     <!-- Step 4: Password entry + install -->
     <div id="screen-install" class="screen">
-      <h2 id="app-name-install"></h2>
+      <div class="screen-header">
+        <h2 id="app-name-install"></h2>
+        <button id="btn-clear-from-install" class="btn-text-link">Use different config</button>
+      </div>
       <div class="card">
         <p>Roku selected: <strong id="selected-device-label"></strong></p>
         <label for="input-password">Roku developer password:</label>
@@ -93,6 +111,7 @@
       <p id="success-version" class="subtitle"></p>
       <div id="post-install-msg" class="card" style="display:none"></div>
       <button id="btn-install-another" class="btn btn-ghost">Install on another Roku</button>
+      <button id="btn-clear-from-success" class="btn-text-link" style="margin-top:12px">Use different config</button>
     </div>
 
     <!-- Step 6: Failure -->

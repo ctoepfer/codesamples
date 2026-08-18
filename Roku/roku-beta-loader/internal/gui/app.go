@@ -57,17 +57,19 @@ func (a *App) LoadConfig(path string) ConfigResult {
 	a.cfgSet = true
 	a.mu.Unlock()
 
-	return a.configResult(cfg)
+	return a.configResult(cfg, path)
 }
 
 // GetConfig returns the currently loaded config, or an error if none is loaded.
+// The Path field is empty here because config is held in memory — callers that
+// need the path should store it from the original LoadConfig response.
 func (a *App) GetConfig() ConfigResult {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if !a.cfgSet {
 		return ConfigResult{Error: "No config loaded."}
 	}
-	return a.configResult(a.cfg)
+	return a.configResult(a.cfg, "")
 }
 
 // DiscoverDevices runs SSDP discovery and returns found Roku devices.
@@ -109,13 +111,14 @@ func (a *App) Install(ip, password string) InstallResult {
 	return InstallResult{OK: true, Version: manifest.Version}
 }
 
-func (a *App) configResult(cfg config.Config) ConfigResult {
+func (a *App) configResult(cfg config.Config, path string) ConfigResult {
 	label := cfg.InstallButtonLabel
 	if label == "" {
 		label = "Install Beta"
 	}
 	return ConfigResult{
 		OK:                 true,
+		Path:               path,
 		AppName:            cfg.AppName,
 		DeveloperModeIntro: cfg.DeveloperModeIntro,
 		DeveloperModeImage: cfg.DeveloperModeImage,

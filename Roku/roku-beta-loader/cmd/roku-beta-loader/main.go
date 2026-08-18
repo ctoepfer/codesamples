@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/ctoepfer/codesamples/Roku/roku-beta-loader/internal/appflow"
 	"github.com/ctoepfer/codesamples/Roku/roku-beta-loader/internal/checksum"
 	"github.com/ctoepfer/codesamples/Roku/roku-beta-loader/internal/config"
 	"github.com/ctoepfer/codesamples/Roku/roku-beta-loader/internal/discovery"
@@ -140,7 +141,7 @@ func runRoku(args []string, deps appDeps) error {
 		}
 		cfg = loaded
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), appflow.DiscoverTimeout)
 	defer cancel()
 	devices, err := deps.discover(ctx)
 	if err != nil {
@@ -151,7 +152,11 @@ func runRoku(args []string, deps appDeps) error {
 		return nil
 	}
 	for _, device := range devices {
-		fmt.Fprintf(deps.stdout, "%s\t%s\t%s\n", device.IP, device.USN, device.Location)
+		name := device.Name
+		if device.ModelName != "" {
+			name += " [" + device.ModelName + "]"
+		}
+		fmt.Fprintf(deps.stdout, "%s\t%s\t%s\n", device.IP, name, device.Location)
 	}
 	return nil
 }
