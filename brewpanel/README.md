@@ -1,6 +1,6 @@
 # brewpanel
 
-A modular brewing control panel: a standardized hardware interface library plus a pluggable GUI, covering the equipment documented in [`docs/hardware/`](../docs/hardware/README.md) (Grainfather, RAPT, Tilt, Plaato, Inkbird, Nespresso, BrewPiLess, Brewblox, iSpindel).
+A modular brewing control panel: a standardized hardware interface library plus a pluggable GUI, covering the equipment documented in [`docs/hardware/`](docs/hardware/README.md) (Grainfather, RAPT, Tilt, Plaato, Inkbird, Nespresso, BrewPiLess, Brewblox, iSpindel).
 
 **Status:** early scaffold. The plugin architecture, safety gate, and three real device drivers (a simulator, Tilt, and iSpindel) are working and tested — including an end-to-end test of iSpindel's real local HTTP receiver via an actual POST request. The remaining six devices are correctly-shaped stubs, ready to be filled in one at a time. The GUI's dashboard construction and confirmation-dialog wiring were verified to import and build cleanly against a real NiceGUI install, but the live interactive parts (the simulator card's polling timer, an actual confirmation dialog round-trip in a browser) were **not** exercised end-to-end in this environment — run it and expect to fix small NiceGUI-API drift.
 

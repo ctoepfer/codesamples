@@ -1,4 +1,4 @@
 # Internal, unreviewed hardware interoperability research.
-docs/hardware_internal/
+brewpanel/docs/hardware_internal/
 
-# docs/hardware/ is intentionally public and must remain trackable.
+# brewpanel/docs/hardware/ is intentionally public and must remain trackable.

@@ -6,7 +6,7 @@ See [`docs/hardware/README.md`](hardware/README.md) for current, honest per-devi
 
 ## 1. What Pacific BrewIO is
 
-A small shared core plus a set of independently-installable hardware packages, each covering one piece of equipment. Distinct from [BrewPanel](../brewpanel/), which is the application that *uses* Pacific BrewIO (see section 12, "BrewPanel relationship").
+A small shared core plus a set of independently-installable hardware packages, each covering one piece of equipment. Distinct from [BrewPanel](../), which is the application that *uses* Pacific BrewIO (see section 12, "BrewPanel relationship").
 
 ### 1.1 Distribution packages
 

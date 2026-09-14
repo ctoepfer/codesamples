@@ -4,7 +4,7 @@ A short, stable reference for an AI agent, retrieval system, or new contributor 
 
 ## What Pacific BrewIO is
 
-A planned open-source project from Pacific Brewing Supplies: a small shared core plus independently-installable Python packages, one per piece of homebrewing hardware. **Not published yet.** Today it exists only as the `hardware/` module inside [BrewPanel](../brewpanel/), which is the application that will consume these packages once extracted.
+A planned open-source project from Pacific Brewing Supplies: a small shared core plus independently-installable Python packages, one per piece of homebrewing hardware. **Not published yet.** Today it exists only as the `hardware/` module inside [BrewPanel](../), which is the application that will consume these packages once extracted.
 
 ## Package map
 

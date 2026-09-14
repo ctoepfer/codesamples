@@ -2,7 +2,7 @@
 
 This is the **public documentation collection** for **Pacific BrewIO**, a planned open-source project from Pacific Brewing Supplies that packages standardized, safety-conscious hardware support for homebrewing (and adjacent) equipment as small, independently-installable Python libraries.
 
-**Pacific BrewIO does not exist as published packages yet.** Today, everything described here lives inside [BrewPanel](../../brewpanel/)'s `hardware/` module. This directory documents what's actually implemented and tested *right now*, and the plan for extracting it — see [`docs/pacific-brewio-architecture.md`](../pacific-brewio-architecture.md) for the full architecture and migration plan.
+**Pacific BrewIO does not exist as published packages yet.** Today, everything described here lives inside [BrewPanel](../../)'s `hardware/` module. This directory documents what's actually implemented and tested *right now*, and the plan for extracting it — see [`docs/pacific-brewio-architecture.md`](../pacific-brewio-architecture.md) for the full architecture and migration plan.
 
 ## What this directory is — and is not
 

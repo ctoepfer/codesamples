@@ -34,6 +34,8 @@ The underlying idea is a standardized capability layer: drivers expose common co
 
 The current status is mixed in a healthy way: some drivers are implemented and working, while others are stubs or planned integrations. This is not a finished product so much as a foundation for turning a messy hardware ecosystem into something more manageable.
 
+Project documentation, hardware interoperability research, and the Pacific BrewIO architecture and migration plan live under [`brewpanel/docs/`](brewpanel/docs/).
+
 ### [packscope](packscope/)
 
 PackScope is a project for EEG and eye-tracking analysis in packaging and advertising research. The key idea is not to pretend the underlying signals justify stronger claims than they actually support. It is built around provenance, calibration, quality gates, and uncertainty: raw signals stay raw, gaze is calibrated before it is treated as a display coordinate, and interpretation remains separate from the measured data.
@@ -55,12 +57,6 @@ It keeps the “what the device requires” and “what the app does” pieces s
 ### [shoeboxed](shoeboxed/)
 
 This is a small utility for working with the Shoeboxed API. It is not a polished product; it is an example of the kind of direct integration work I sometimes do when a vendor exposes an API that is useful but awkward, and I want a simple way to authenticate and fetch the data I need.
-
-### [docs](docs/)
-
-This is the project documentation and architecture layer for the workspace. It includes notes on AI integration, hardware research, Pacific BrewIO architecture, and internal documentation for the brewing hardware systems referenced elsewhere in the repo.
-
-A lot of this documentation exists because the software here is usually tied to real hardware, real protocols, and actual operational constraints. The docs are as important as the code in making those assumptions explicit.
 
 ## Contact
 
