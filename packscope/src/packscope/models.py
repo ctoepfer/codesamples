@@ -4,17 +4,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass
+from datetime import datetime
 from enum import StrEnum
+from numbers import Real
+from typing import Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+
+from packscope.privacy import SessionConsent as SessionConsent
 
 
 class MetricStatus(StrEnum):
     """Availability state for a derived measurement."""
 
     AVAILABLE = "available"
+    UNAVAILABLE = "unavailable"
     INSUFFICIENT_CHANNELS = "insufficient_channels"
     INSUFFICIENT_SAMPLES = "insufficient_samples"
     FAILED_QUALITY_GATE = "failed_quality_gate"
@@ -29,27 +35,64 @@ class MetricReason(StrEnum):
     BAND_NOT_COVERED = "The Welch frequency grid does not cover the requested band."
     INVALID_BAND_POWER = "Band-power estimate is not a positive finite number."
     NON_FINITE_RATIO = "Power ratio is not finite."
+    CONSENT_NOT_GRANTED = "CONSENT_NOT_GRANTED"
+    FREETEXT_CONSENT_NOT_GRANTED = "FREETEXT_CONSENT_NOT_GRANTED"
+    MISSING_HEDONIC_SCORE = "MISSING_HEDONIC_SCORE"
+    RATING_QUALITY_FAILED = "RATING_QUALITY_FAILED"
+    INVALID_SENSORY_RECORD = "INVALID_SENSORY_RECORD"
+    MISSING_PROTOCOL = "MISSING_PROTOCOL"
+    MISSING_RATING = "MISSING_RATING"
+    MISSING_ATTRIBUTION = "MISSING_ATTRIBUTION"
+    AMBIGUOUS_RATING = "AMBIGUOUS_RATING"
+    PREFERENCE_RANK_CONFLICT = "PREFERENCE_RANK_CONFLICT"
+    PROVENANCE_MISMATCH = "PROVENANCE_MISMATCH"
+    INVALID_ATTRIBUTION = "INVALID_ATTRIBUTION"
+    NO_QUALIFYING_PAIRS = "NO_QUALIFYING_PAIRS"
 
 
-@dataclass(frozen=True, slots=True)
-class MetricResult:
+T = TypeVar("T")
+
+
+@dataclass(frozen=True)
+class MetricResult(Generic[T]):
     """A transparent derived value that carries availability and provenance context."""
 
     name: str
     status: MetricStatus
-    value: float | None
+    value: T | None
     reason: str | MetricReason | None = None
     details: Mapping[str, float | int | str | bool] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.status == MetricStatus.AVAILABLE and self.value is None:
-            raise ValueError("An available metric must contain a numeric value.")
+            raise ValueError("An available result must contain a value.")
         if self.status != MetricStatus.AVAILABLE and not self.reason:
             raise ValueError("An unavailable metric must explain its reason.")
         if self.status != MetricStatus.AVAILABLE and self.value is not None:
             raise ValueError("An unavailable metric must not contain a numeric value.")
-        if self.value is not None and not np.isfinite(self.value):
+        if self.value is not None:
+            if isinstance(self.value, bool) or not (isinstance(self.value, Real) or is_dataclass(self.value)):
+                raise ValueError("Metric values must be numeric or structured dataclass records.")
+            _validate_finite_payload(self.value)
+
+
+def _validate_finite_payload(value: object) -> None:
+    """Apply the finite-value invariant recursively to structured result payloads."""
+    if isinstance(value, Real):
+        if not np.isfinite(value):
             raise ValueError("Metric values must be finite.")
+    elif is_dataclass(value) and not isinstance(value, type):
+        for item in fields(value):
+            _validate_finite_payload(getattr(value, item.name))
+    elif isinstance(value, Mapping):
+        for key, item in value.items():
+            _validate_finite_payload(key)
+            _validate_finite_payload(item)
+    elif isinstance(value, (list, tuple, frozenset)):
+        for item in value:
+            _validate_finite_payload(item)
+    elif value is not None and not isinstance(value, (str, datetime)):
+        raise ValueError("Unsupported structured metric field.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,7 +182,7 @@ class MetricWindow:
 
     start_time_s: float
     end_time_s: float
-    result: MetricResult
+    result: MetricResult[float]
     source: str
 
     def __post_init__(self) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -48,6 +48,8 @@ def to_dict(value: Serializable, metadata: ExportMetadata) -> dict[str, Any]:
     """Encode a supported contract into a schema-versioned provenance envelope."""
     if not isinstance(metadata, ExportMetadata):
         raise ConfigurationError("ExportMetadata is required.")
+    if isinstance(value, MetricResult) and is_dataclass(value.value):
+        raise ConfigurationError("Version-one serialization supports numeric MetricResult values only.")
     payload = asdict(value)
     if isinstance(value, EegFrame):
         payload["samples"] = value.samples.tolist()

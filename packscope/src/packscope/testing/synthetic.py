@@ -5,11 +5,18 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import numpy as np
 
+from packscope.analysis.sensory_join import SensoryAttribution
 from packscope.errors import ConfigurationError
 from packscope.models import EegFrame, GazeSample
+from packscope.pipeline.runner import SessionRunner
+from packscope.privacy import SessionConsent
+from packscope.reporting.roi import NormalizedRect, RegionOfInterest
+from packscope.sensory.models import BlindingType, SensoryRating, TastingProtocolMetadata
 
 
 def generate_eeg_frames(
@@ -86,3 +93,49 @@ def generate_gaze_samples(
             fraction = (phase - fixation_duration_s) / saccade_duration_s
             x, y = x + fraction * (nx - x), y + fraction * (ny - y)
         yield GazeSample(timestamp, True, x, y, 1.0, "synthetic", "synthetic-calibration")
+
+
+@dataclass(frozen=True, slots=True)
+class SyntheticSensoryDataset:
+    """Paired fixtures with explicit study keys; ratings are not derived from EEG/gaze."""
+
+    eeg_frames: dict[tuple[str, str], tuple[EegFrame, ...]]
+    gaze_samples: dict[tuple[str, str], tuple[GazeSample, ...]]
+    ratings: tuple[SensoryRating, ...]
+    attributions: tuple[SensoryAttribution, ...]
+    consents: dict[str, SessionConsent]
+    protocols: dict[tuple[str, str], TastingProtocolMetadata]
+
+
+def generate_synthetic_sensory_ratings(*, session_count: int = 3, seed: int = 0) -> SyntheticSensoryDataset:
+    """Generate two versioned variants per synthetic session and post-exposure ratings.
+
+    Scores cycle through 1–9 independently of EEG and gaze, solely for deterministic
+    testing. Timestamped self-reports occur the next day on a separate wall clock.
+    """
+    if type(session_count) is not int or session_count < 1:
+        raise ConfigurationError("session_count must be a positive integer.")
+    eeg, gaze, consents, protocols = {}, {}, {}, {}
+    ratings, attributions = [], []
+    protocol = TastingProtocolMetadata("synthetic-v1", BlindingType.DOUBLE_BLIND, 60, 20, True)
+    for index in range(session_count):
+        session = f"synthetic-session-{index}"
+        consents[session] = SessionConsent.create(
+            f"synthetic-participant-{index}", "synthetic-consent-v1", [], allow_sensory_ratings=True)
+        for variant in range(2):
+            variant_id = f"synthetic-variant-{variant}@v1"
+            stimulus_id = f"synthetic-stimulus-{variant}"
+            key = session, variant_id
+            eeg[key] = tuple(generate_eeg_frames(duration_s=4, seed=seed + index * 2 + variant))
+            gaze[key] = tuple(generate_gaze_samples(duration_s=4))
+            roi = RegionOfInterest("panel", "Panel", NormalizedRect(0, 0, 1, 1), stimulus_id, "v1")
+            summary = SessionRunner().run(eeg[key], gaze[key], [roi])
+            attributions.extend(SensoryAttribution(session, variant_id, stimulus_id, "synthetic-product", a)
+                                for a in summary.roi_attributions)
+            ratings.append(SensoryRating(
+                f"synthetic-rating-{index}-{variant}", session, stimulus_id, variant_id, "synthetic-product",
+                datetime(2026, 1, 2, tzinfo=UTC) + timedelta(minutes=index * 2 + variant),
+                hedonic_scale_9pt=1 + (index * 2 + variant) % 9,
+                intensity_ratings={"aroma": float(variant + 3)}, preference_rank=variant + 1))
+            protocols[key] = protocol
+    return SyntheticSensoryDataset(eeg, gaze, tuple(ratings), tuple(attributions), consents, protocols)

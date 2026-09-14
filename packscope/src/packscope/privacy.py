@@ -28,6 +28,8 @@ class ConsentScope(StrEnum):
     CAMERA_VIDEO = "camera_video"
     DERIVED_METRICS = "derived_metrics"
     AGGREGATED_EXPORT = "aggregated_export"
+    SENSORY_RATINGS = "sensory_ratings"
+    SENSORY_FREETEXT = "sensory_freetext"
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +40,22 @@ class SessionConsent:
     document_version: str
     granted_scopes: frozenset[ConsentScope]
     consented_at_utc: str
+    allow_sensory_ratings: bool = False
+    allow_sensory_freetext: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.allow_sensory_ratings) is not bool or type(self.allow_sensory_freetext) is not bool:
+            raise ConfigurationError("Sensory consent flags must be booleans.")
+        # Boolean fields are authoritative, including explicit revocation via replace().
+        scopes = frozenset(ConsentScope(scope) for scope in self.granted_scopes)
+        scopes -= {ConsentScope.SENSORY_RATINGS, ConsentScope.SENSORY_FREETEXT}
+        if self.allow_sensory_ratings:
+            scopes |= {ConsentScope.SENSORY_RATINGS}
+        if self.allow_sensory_freetext:
+            scopes |= {ConsentScope.SENSORY_FREETEXT}
+        object.__setattr__(self, "granted_scopes", frozenset(scopes))
+        object.__setattr__(self, "allow_sensory_ratings", ConsentScope.SENSORY_RATINGS in scopes)
+        object.__setattr__(self, "allow_sensory_freetext", ConsentScope.SENSORY_FREETEXT in scopes)
 
     @classmethod
     def create(
@@ -45,15 +63,23 @@ class SessionConsent:
         participant_code: str,
         document_version: str,
         granted_scopes: Iterable[ConsentScope],
+        *,
+        allow_sensory_ratings: bool = False,
+        allow_sensory_freetext: bool = False,
     ) -> SessionConsent:
         """Create a record without collecting a participant's direct identity."""
         if not participant_code.strip() or not document_version.strip():
             raise ConfigurationError("participant_code and document_version are required.")
+        if type(allow_sensory_ratings) is not bool or type(allow_sensory_freetext) is not bool:
+            raise ConfigurationError("Sensory consent flags must be booleans.")
+        scopes = frozenset(ConsentScope(scope) for scope in granted_scopes)
         return cls(
             participant_code=participant_code,
             document_version=document_version,
-            granted_scopes=frozenset(granted_scopes),
+            granted_scopes=scopes,
             consented_at_utc=datetime.now(UTC).isoformat(),
+            allow_sensory_ratings=allow_sensory_ratings or ConsentScope.SENSORY_RATINGS in scopes,
+            allow_sensory_freetext=allow_sensory_freetext or ConsentScope.SENSORY_FREETEXT in scopes,
         )
 
     def requires(self, *scopes: ConsentScope) -> None:

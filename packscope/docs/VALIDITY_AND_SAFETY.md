@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 # Measurement Validity, Safety, and Responsible Use
 
 > PackScope produces exploratory measurements for comparative design research. It does **not** read minds, identify emotion, assess mental health, determine purchasing intent, or provide medical advice.
@@ -59,3 +60,37 @@ Every chart, heatmap, or comparison table should state the study limitations and
 [1]: https://pmc.ncbi.nlm.nih.gov/articles/PMC11225961/ "Guidelines for minimum reporting of eye-tracking studies"
 [2]: https://pmc.ncbi.nlm.nih.gov/articles/PMC6427454/ "Review of artefact removal and denoising in EEG biosignal processing"
 [3]: https://www.unesco.org/en/legal-affairs/recommendation-ethics-neurotechnology "UNESCO Recommendation on the Ethics of Neurotechnology"
+
+## Scientific boundary for taste and sensory self-reports
+
+Taste, aroma, intensity, and hedonic ratings are **protocol-dependent self-reports**.
+They record what a participant reported on a declared scale under recorded serving
+and exposure conditions. They are not objective flavor measurements, neural liking
+scores, emotion labels, or automated preference classifications. A reported
+preference rank is distinct from a prediction of preference or purchase behavior.
+
+Any analysis of relationships between gaze/EEG measurements and taste ratings is
+strictly exploratory and descriptive or correlation-based. Correlation does not
+establish neural causality. PackScope does not fit predictive liking models or
+classifiers. Report sample size, missingness, exclusions, scale definitions, protocol
+versions, and participant/session structure. Repeated EEG windows or repeated
+variants from one participant must not be treated as independent participants.
+Keep packaging expectations and post-tasting experiences separately identified;
+never reconstruct a missing rating from gaze, EEG, rank, or another participant.
+
+Packaging exposure **cannot be claimed to cause flavor-perception changes** from
+these joins without rigorous protocol controls and an appropriate causal study
+design. Controls include counterbalancing exposure and serving order, documented
+washouts, matched serving conditions, and double-blinding where the experimental
+condition permits it. Record who was blinded, what information was hidden, and any
+unblinding or carryover concerns in the study protocol. A recorded `DOUBLE_BLIND`
+flag is not proof of successful blinding; `SINGLE_BLIND` and `OPEN` are explicit
+conditions requiring corresponding limitations. Passing a software quality gate
+is not validation of the study's causal interpretation.
+
+Obtain explicit sensory-rating consent before collection and a separate permission
+for optional free-text notes. Notes can contain identifying or sensitive information;
+they are excluded from descriptive join tables. Missing consent, flagged ratings,
+and missing hedonic scores produce unavailable results with reasons, never imputed
+hedonic values. A zero paired sample count describes absence of qualifying pairs;
+it must not be presented as a neutral or zero-liking response.

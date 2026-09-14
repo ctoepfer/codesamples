@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 # PackScope Architecture
 
 > **Status:** initial reference implementation. PackScope is an exploratory, local-first research utility. It does not diagnose, detect emotion, determine purchase intent, or establish causal responses to packaging.
@@ -139,3 +140,104 @@ packscope/
 [7]: https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/python "MediaPipe Face Landmarker for Python"
 [8]: https://github.com/esdalmaijer/PyGaze "PyGaze Source Repository"
 [9]: https://www.unesco.org/en/legal-affairs/recommendation-ethics-neurotechnology "UNESCO Recommendation on the Ethics of Neurotechnology"
+
+## Post-exposure sensory records and offline joins
+
+`sensory.models.SensoryRating` records self-reported hedonic ratings, named intensity
+ratings, optional preference ranks, and separately consented notes. The frozen
+contract validates identifiers and scale types. Hedonic scores are integers 1–9;
+`None` means missing. This implementation declares intensity scales as **0–10**
+(0 absent, 10 maximum), with finite values only. Preference ranks are positive
+integers; ties are not supported within a session/protocol ranking set. Missing
+optional intensity or rank fields are retained without imputation. Dictionaries
+and lists are defensively copied, and the gate revalidates them before use.
+
+`TastingProtocolMetadata` requires a version, explicit `BlindingType.DOUBLE_BLIND`,
+`SINGLE_BLIND`, or `OPEN`, washout duration, serving temperature, and counterbalancing
+status. These fields record the declared protocol; they do not certify its execution
+or establish universal temperature/washout thresholds.
+
+`SessionConsent` remains defined in `privacy.py` and is also available from
+`models.py`. Existing four-argument initializers remain valid and default to no
+sensory permissions. `allow_sensory_ratings` and `allow_sensory_freetext` are separate
+boolean permissions. `SessionConsent.create()` accepts these keyword arguments or
+explicit `ConsentScope.SENSORY_RATINGS` / `SENSORY_FREETEXT` grants. Constructors and
+`dataclasses.replace()` treat the boolean fields as authoritative and synchronize
+the named scopes, so setting a flag to false revokes that permission. Manifest JSON
+retains both booleans and scopes; conflicting envelope provenance is rejected.
+Free-text permission alone does not authorize ratings. Collection applications must
+check permissions **before capture**; analysis gates cannot undo unauthorized storage.
+
+`evaluate_sensory_quality()` returns `MetricResult[SensoryRating]`. Missing consent,
+missing protocol, missing hedonic scores, and quality-flagged ratings return
+`MetricStatus.UNAVAILABLE`, `value=None`, and a `MetricReason`. Any supplied notes
+require free-text consent. The result wrapper now accepts structured dataclass
+payloads as well as numeric metrics, recursively rejecting non-finite numeric fields.
+Existing EEG status values and numeric behavior remain available. The version-one
+JSON serializer continues to support numeric `MetricResult` payloads only; it
+explicitly rejects structured results rather than exporting an unreadable schema.
+
+```mermaid
+flowchart LR
+    A[Quality-gated EEG and calibrated gaze] --> W[WindowAttribution]
+    W --> C[SensoryAttribution with explicit study IDs]
+    R[Discrete post-exposure SensoryRating] --> Q[Consent and rating gates]
+    P[Versioned tasting protocol] --> Q
+    C --> J[Offline join by session_id and variant_id]
+    Q --> J
+    J --> T[Descriptive rows, N, missingness and rejection reasons]
+```
+
+`analysis.sensory_join.SensoryAttribution` adds explicit session, variant, stimulus,
+and product identity to an existing `WindowAttribution`. `variant_id` must identify
+an immutable visual-stimulus version in the study manifest; changing the visual
+requires a new variant ID. The join verifies stimulus/product agreement and never
+infers IDs from timestamps or ROI names. Retain the stimulus hash, ROI versions,
+and acquisition provenance in the originating session manifest.
+
+`join_attributions_with_sensory()` accepts these context records, ratings,
+per-session consents, and protocols keyed by `(session_id, variant_id)`. It performs
+a full outer join on that pair. Ratings use timezone-aware wall-clock timestamps;
+EEG/gaze use their acquisition clock. Ratings may occur long after exposure, with
+no nearest-time match, resampling, interpolation, or forced real-time alignment.
+Each variant is one tasting per session; repeat tastings need distinct session IDs.
+Duplicate rating IDs, multiple ratings per join key, tied ranks within a
+session/protocol, and stimulus/product conflicts are explicitly rejected.
+
+Rows contain gated hedonic scores, independent gaze dwell, original window EEG
+results, protocol metadata, and consent scopes. Free-text notes are excluded from
+summary tables. Exact repeated exposure intervals across different metrics count
+once toward dwell; conflicting or partially overlapping intervals make aggregate
+dwell unavailable instead of double-counting it. EEG failures remain visible and
+do not erase a valid self-report or valid gaze dwell.
+
+`summary.n` counts session/variant pairs with available hedonic and gaze data;
+`n_eeg_pairs` additionally requires an available EEG metric. Neither counts EEG
+windows as participants or asserts independence of repeated participant sessions.
+Missing rating records, missing required hedonic scores, absent attributions,
+rejected rating rows, and rejected EEG windows have separate counts. Reason counts
+count unavailable measurements, so one row can contribute multiple reasons.
+An available summary means the descriptive table exists, even if `n=0`; each
+unavailable measurement still has `value=None`. Empty inputs return an unavailable
+join result. The join does not pool protocols or fit correlations or predictions.
+
+An offline fixture exercises the complete path without new dependencies:
+
+```python
+from packscope.analysis.sensory_join import join_attributions_with_sensory
+from packscope.testing.synthetic import generate_synthetic_sensory_ratings
+
+fixture = generate_synthetic_sensory_ratings(session_count=3)
+result = join_attributions_with_sensory(
+    fixture.attributions, fixture.ratings,
+    consents=fixture.consents, protocols=fixture.protocols,
+)
+print(result.value.n)  # Six synthetic session/variant observations
+```
+
+Fixtures contain paired raw EEG/gaze streams and explicitly simulated protocol and
+consent records. Synthetic self-report scores are generated independently of EEG
+noise and gaze allocation; they are not neural estimates. Study designs comparing
+packaging expectation and sensory experience must retain those as separately
+identified conditions and questionnaires; this module does not infer or subtract
+an undeclared expectation score from a taste rating.
