@@ -1,0 +1,32 @@
+{
+  "name": "ctoepfer/verifiable_voting",
+  "type": "drupal-module",
+  "description": "Reusable, evidence-oriented election and contest framework for Drupal.",
+  "keywords": ["drupal", "voting", "election", "verifiability", "cryptography"],
+  "homepage": "https://github.com/ctoepfer/codesamples",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "drupal/core": "^10 || ^11",
+    "ext-sodium": "*",
+    "mmccook/php-json-canonicalization-scheme": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Drupal\\verifiable_voting\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Drupal\\Tests\\verifiable_voting\\": "tests/src/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "symfony/runtime": true,
+      "drupal/core-composer-scaffold": true
+    }
+  }
+}

@@ -1,0 +1,6 @@
+entity.verifiable_voting_election.collection:
+  title: 'Verifiable Voting'
+  description: 'Manage reusable elections and verifiable election evidence.'
+  route_name: entity.verifiable_voting_election.collection
+  parent: system.admin_config
+  weight: 50

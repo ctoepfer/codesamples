@@ -1,0 +1,10 @@
+privacy_log_context_allowlist:
+  - election_uuid
+  - event_type
+  - provider
+  - reason_code
+  - sequence
+  - record_hash
+  - receipt
+  - status
+  - artifact_hash

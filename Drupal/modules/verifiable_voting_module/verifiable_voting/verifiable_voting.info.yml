@@ -1,0 +1,6 @@
+name: Verifiable Voting
+type: module
+description: 'Reusable, evidence-oriented election and contest framework with conservative cryptographic reference profiles.'
+package: Security
+core_version_requirement: ^10 || ^11
+configure: entity.verifiable_voting_election.collection

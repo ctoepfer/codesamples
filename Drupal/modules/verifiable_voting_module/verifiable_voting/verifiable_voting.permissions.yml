@@ -1,0 +1,19 @@
+administer verifiable voting:
+  title: 'Administer Verifiable Voting'
+  description: 'Create and configure elections, choices, and provider settings.'
+  restrict access: true
+
+manage verifiable voting lifecycle:
+  title: 'Manage Verifiable Voting lifecycle'
+  description: 'Open, close, tally, certify, archive, and invalidate elections.'
+  restrict access: true
+
+export verifiable voting audit packages:
+  title: 'Export Verifiable Voting audit packages'
+  description: 'Export complete election evidence packages from the administration interface.'
+  restrict access: true
+
+view verifiable voting security audit:
+  title: 'View Verifiable Voting security audit'
+  description: 'View privacy-preserving operational security events.'
+  restrict access: true

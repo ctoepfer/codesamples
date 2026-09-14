@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Install, schema, and requirements hooks for Verifiable Voting.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ */
+function verifiable_voting_schema(): array {
+  $schema['verifiable_voting_ledger_state'] = [
+    'description' => 'Transactional state for each public hash-chain ledger.',
+    'fields' => [
+      'election_uuid' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
+      'next_sequence' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'last_hash' => ['type' => 'blob', 'size' => 'normal', 'not null' => TRUE],
+      'updated' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+    ],
+    'primary key' => ['election_uuid'],
+  ];
+
+  $schema['verifiable_voting_nullifier_guard'] = [
+    'description' => 'Durable uniqueness guard for accepted election-specific nullifiers.',
+    'fields' => [
+      'election_uuid' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
+      'nullifier' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
+      'created' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+    ],
+    'primary key' => ['election_uuid', 'nullifier'],
+  ];
+
+  $schema['verifiable_voting_security_audit'] = [
+    'description' => 'Privacy-preserving administrative and security event log.',
+    'fields' => [
+      'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      'election_uuid' => ['type' => 'varchar', 'length' => 128, 'not null' => FALSE],
+      'event_type' => ['type' => 'varchar', 'length' => 128, 'not null' => TRUE],
+      'context_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+      'created' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+    ],
+    'primary key' => ['id'],
+    'indexes' => [
+      'election_created' => ['election_uuid', 'created'],
+      'event_created' => ['event_type', 'created'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function verifiable_voting_requirements(string $phase): array {
+  $requirements = [];
+  if ($phase === 'runtime' && !extension_loaded('sodium')) {
+    $requirements['verifiable_voting_sodium'] = [
+      'title' => t('Verifiable Voting: libsodium'),
+      'value' => t('Missing'),
+      'description' => t('The native PHP ext-sodium extension is required. The module fails closed without it.'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+  return $requirements;
+}

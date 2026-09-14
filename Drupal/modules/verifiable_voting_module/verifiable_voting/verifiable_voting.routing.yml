@@ -1,0 +1,73 @@
+verifiable_voting.ledger:
+  path: '/voting/election/{verifiable_voting_election}/ledger'
+  defaults:
+    _controller: '\Drupal\verifiable_voting\Controller\LedgerController::view'
+    _title: 'Election ledger'
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      verifiable_voting_election:
+        type: entity:verifiable_voting_election
+
+verifiable_voting.cast:
+  path: '/voting/election/{verifiable_voting_election}/cast'
+  defaults:
+    _form: '\Drupal\verifiable_voting\Form\BallotCastForm'
+    _title: 'Cast ballot'
+  requirements:
+    _access: 'TRUE'
+  options:
+    parameters:
+      verifiable_voting_election:
+        type: entity:verifiable_voting_election
+
+verifiable_voting.choice_add:
+  path: '/admin/config/verifiable-voting/elections/{verifiable_voting_election}/choices/add'
+  defaults:
+    _form: '\Drupal\verifiable_voting\Form\ChoiceAddForm'
+    _title: 'Add choice'
+  requirements:
+    _permission: 'administer verifiable voting'
+  options:
+    parameters:
+      verifiable_voting_election:
+        type: entity:verifiable_voting_election
+
+verifiable_voting.receipt:
+  path: '/voting/election/{verifiable_voting_election}/receipt/{receipt}'
+  defaults:
+    _controller: '\Drupal\verifiable_voting\Controller\LedgerController::receipt'
+    _title: 'Ballot receipt'
+  requirements:
+    _access: 'TRUE'
+    receipt: '[A-Za-z0-9_-]{43}'
+  options:
+    parameters:
+      verifiable_voting_election:
+        type: entity:verifiable_voting_election
+
+verifiable_voting.audit_package:
+  path: '/admin/config/verifiable-voting/elections/{verifiable_voting_election}/audit-package'
+  defaults:
+    _controller: '\Drupal\verifiable_voting\Controller\AuditExportController::download'
+    _title: 'Export audit package'
+  requirements:
+    _permission: 'export verifiable voting audit packages'
+  options:
+    parameters:
+      verifiable_voting_election:
+        type: entity:verifiable_voting_election
+
+verifiable_voting.transition:
+  path: '/admin/config/verifiable-voting/elections/{verifiable_voting_election}/{operation}'
+  defaults:
+    _form: '\Drupal\verifiable_voting\Form\ElectionTransitionForm'
+    _title: 'Election lifecycle action'
+  requirements:
+    _permission: 'manage verifiable voting lifecycle'
+    operation: 'open|close|tally|certify|archive|invalidate'
+  options:
+    parameters:
+      verifiable_voting_election:
+        type: entity:verifiable_voting_election

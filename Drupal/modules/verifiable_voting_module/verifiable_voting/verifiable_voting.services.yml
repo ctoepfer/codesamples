@@ -1,0 +1,86 @@
+services:
+  logger.channel.verifiable_voting:
+    parent: logger.channel_base
+    arguments: ['verifiable_voting']
+
+  plugin.manager.verifiable_voting.ballot_type:
+    class: Drupal\verifiable_voting\Plugin\BallotTypeManager
+    parent: default_plugin_manager
+
+  verifiable_voting.canonicalizer:
+    class: Drupal\verifiable_voting\Service\JcsCanonicalizer
+
+  verifiable_voting.receipt_generator:
+    class: Drupal\verifiable_voting\Service\ReceiptGenerator
+    arguments: ['@verifiable_voting.canonicalizer']
+
+  verifiable_voting.audit_logger:
+    class: Drupal\verifiable_voting\Service\PrivacyAwareAuditLogger
+    arguments: ['@database', '@datetime.time', '@verifiable_voting.canonicalizer', '@logger.channel.verifiable_voting']
+
+  verifiable_voting.signature_provider.development:
+    class: Drupal\verifiable_voting\Service\DevelopmentSignatureProvider
+    tags:
+      - { name: verifiable_voting.signature_provider }
+
+  verifiable_voting.encryption_provider.development:
+    class: Drupal\verifiable_voting\Service\DevelopmentEncryptionProvider
+    arguments: ['@verifiable_voting.canonicalizer']
+    tags:
+      - { name: verifiable_voting.encryption_provider }
+
+  verifiable_voting.eligibility_provider.development:
+    class: Drupal\verifiable_voting\Service\DevelopmentCredentialEligibilityProvider
+    tags:
+      - { name: verifiable_voting.eligibility_provider }
+
+  verifiable_voting.proof_verifier.development:
+    class: Drupal\verifiable_voting\Service\DevelopmentProofVerifier
+    tags:
+      - { name: verifiable_voting.proof_verifier }
+
+  verifiable_voting.tally_provider.development:
+    class: Drupal\verifiable_voting\Service\DevelopmentDecryptTallyProvider
+    arguments: ['@entity_type.manager', '@verifiable_voting.encryption_registry']
+    tags:
+      - { name: verifiable_voting.tally_provider }
+
+  verifiable_voting.eligibility_registry:
+    class: Drupal\verifiable_voting\Service\ProviderRegistry
+    arguments: [!tagged_iterator verifiable_voting.eligibility_provider]
+
+  verifiable_voting.proof_registry:
+    class: Drupal\verifiable_voting\Service\ProviderRegistry
+    arguments: [!tagged_iterator verifiable_voting.proof_verifier]
+
+  verifiable_voting.encryption_registry:
+    class: Drupal\verifiable_voting\Service\ProviderRegistry
+    arguments: [!tagged_iterator verifiable_voting.encryption_provider]
+
+  verifiable_voting.signature_registry:
+    class: Drupal\verifiable_voting\Service\ProviderRegistry
+    arguments: [!tagged_iterator verifiable_voting.signature_provider]
+
+  verifiable_voting.tally_registry:
+    class: Drupal\verifiable_voting\Service\ProviderRegistry
+    arguments: [!tagged_iterator verifiable_voting.tally_provider]
+
+  verifiable_voting.readiness_checker:
+    class: Drupal\verifiable_voting\Service\ElectionReadinessChecker
+    arguments: ['@plugin.manager.verifiable_voting.ballot_type', '@verifiable_voting.eligibility_registry', '@verifiable_voting.proof_registry', '@verifiable_voting.encryption_registry', '@verifiable_voting.signature_registry', '@entity_type.manager']
+
+  verifiable_voting.ledger:
+    class: Drupal\verifiable_voting\Service\HashChainLedger
+    arguments: ['@database', '@datetime.time', '@lock', '@verifiable_voting.canonicalizer', '@entity_type.manager']
+
+  verifiable_voting.ballot_intake:
+    class: Drupal\verifiable_voting\Service\BallotIntakeService
+    arguments: ['@database', '@datetime.time', '@entity_type.manager', '@plugin.manager.verifiable_voting.ballot_type', '@verifiable_voting.eligibility_registry', '@verifiable_voting.proof_registry', '@verifiable_voting.encryption_registry', '@verifiable_voting.receipt_generator', '@verifiable_voting.ledger', '@verifiable_voting.audit_logger']
+
+  verifiable_voting.lifecycle_manager:
+    class: Drupal\verifiable_voting\Service\ElectionLifecycleManager
+    arguments: ['@database', '@datetime.time', '@entity_type.manager', '@verifiable_voting.readiness_checker', '@verifiable_voting.canonicalizer', '@verifiable_voting.ledger', '@verifiable_voting.signature_registry', '@verifiable_voting.encryption_registry', '@verifiable_voting.tally_registry', '@verifiable_voting.audit_logger']
+
+  verifiable_voting.audit_exporter:
+    class: Drupal\verifiable_voting\Service\AuditExporter
+    arguments: ['@entity_type.manager', '@verifiable_voting.canonicalizer']

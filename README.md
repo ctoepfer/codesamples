@@ -46,6 +46,8 @@ The project is deliberately careful about what it does not claim. It is not a me
 
 This directory contains Drupal work rather than a standalone Drupal project. The main package here is the [Commerce USIO](Drupal/modules/commerce_usio/) payment gateway module, which integrates Drupal Commerce with the USIO checkout flow and keeps the card-tokenization model aligned with the security and PCI-scope concerns that matter in a real checkout flow.
 
+It also includes [Verifiable Voting](Drupal/modules/verifiable_voting_module/verifiable_voting/), a domain-neutral election and evidence-publication module: election/choice entities with an explicit lifecycle, ballot acceptance that derives a receipt from an RFC 8785 canonicalized envelope, and a SHA-256 hash-chain ledger for tamper evidence. It is unusually direct about its own limits — the bundled credential, encryption, proof, and tally providers are labeled development-only, ballot privacy is not end-to-end, and nothing here is a zero-knowledge or threshold-cryptography claim. It's experimental software, not certified voting equipment.
+
 This is a practical integration project rather than a general-purpose framework. It is meant to be used as a module in a Drupal site and to be audited carefully before production use.
 
 ### [Roku](Roku/)
