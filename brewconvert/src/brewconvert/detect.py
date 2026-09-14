@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 def _local(tag: str) -> str:
-    return tag.split('}', 1)[-1] if '}' in tag else tag
+    return tag.split("}", 1)[-1] if "}" in tag else tag
 
 
 def _looks_like_promash(text: str) -> bool:
     lower = text.lower()
-    return "promash" in lower or "recipe specifics" in lower or "grain/extract/sugar" in lower
+    return (
+        "promash" in lower
+        or "recipe specifics" in lower
+        or "grain/extract/sugar" in lower
+    )
 
 
 def detect_format(path: str | Path) -> str:
@@ -22,7 +26,7 @@ def detect_format(path: str | Path) -> str:
     if suffix in {".btp", ".btt"}:
         return "beertools-btp"
     if suffix in {".txt", ".promash"}:
-        sample = p.read_text(encoding="utf-8", errors="ignore")[:8192]
+        sample = p.read_text(encoding="utf-8", errors="strict")[:8192]
         if _looks_like_promash(sample):
             return "promash-text"
     if suffix in {".json", ".brewfather"}:
@@ -31,9 +35,19 @@ def detect_format(path: str | Path) -> str:
         except json.JSONDecodeError as exc:
             raise ValueError(f"Could not parse JSON file: {p}") from exc
         obj = data.get("beerjson", data) if isinstance(data, dict) else data
-        if isinstance(obj, dict) and ("version" in obj and "recipes" in obj or "ingredients" in obj and any(k in obj.get("ingredients", {}) for k in ("fermentable_additions", "hop_additions"))):
+        if isinstance(obj, dict) and (
+            "version" in obj
+            and "recipes" in obj
+            or "ingredients" in obj
+            and any(
+                k in obj.get("ingredients", {})
+                for k in ("fermentable_additions", "hop_additions")
+            )
+        ):
             return "beerjson"
-        if isinstance(obj, dict) and any(k in obj for k in ("batchSize", "fermentables", "hops", "yeasts", "miscs")):
+        if isinstance(obj, dict) and any(
+            k in obj for k in ("batchSize", "fermentables", "hops", "yeasts", "miscs")
+        ):
             return "brewfather-json"
         if isinstance(obj, list):
             return "brewfather-json"
@@ -49,6 +63,8 @@ def detect_format(path: str | Path) -> str:
         return "beerxml"
     if root.tag == "Selections" or local == "Selections":
         return "beersmith-bsmx"
-    if local == "Recipe" and ("beertools" in root.tag.lower() or root.attrib.get("version")):
+    if local in {"Recipe", "Recipes"} and (
+        "beertools" in root.tag.lower() or root.attrib.get("version")
+    ):
         return "beertools-btp"
     raise ValueError(f"Unsupported XML root tag: {root.tag}")

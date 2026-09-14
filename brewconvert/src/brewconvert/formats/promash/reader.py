@@ -3,7 +3,16 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from brewconvert.model import Recipe, FermentableAddition, HopAddition, YeastAddition, MiscAddition, MashStep
+from brewconvert.formats.boundary import reader
+from brewconvert.model import (
+    FermentableAddition,
+    HopAddition,
+    MashStep,
+    MiscAddition,
+    Recipe,
+    YeastAddition,
+)
+from brewconvert.model.units import Quantity
 
 _NUM = re.compile(r"[-+]?\d+(?:\.\d+)?")
 
@@ -15,16 +24,8 @@ def _first_num(text: str | None) -> float | None:
     return float(m.group(0)) if m else None
 
 
-def _lb_to_kg(v: float | None) -> float | None:
-    return None if v is None else v * 0.45359237
-
-
-def _oz_to_kg(v: float | None) -> float | None:
-    return None if v is None else v * 0.028349523125
-
-
-def _gal_to_l(v: float | None) -> float | None:
-    return None if v is None else v * 3.785411784
+def _gal_to_l(v):
+    return None if v is None else float(Quantity(v, "US gal").to("L"))
 
 
 def _f_to_c(v: float | None) -> float | None:
@@ -38,24 +39,19 @@ def _split_label(line: str) -> tuple[str, str] | None:
     return None
 
 
-def _parse_amount(line: str) -> float | None:
-    n = _first_num(line)
-    lower = line.lower()
-    if n is None:
-        return None
-    if " oz" in lower or lower.startswith("oz"):
-        return _oz_to_kg(n)
-    if " g" in lower or lower.startswith("g"):
-        return n / 1000
-    if " kg" in lower:
-        return n
-    return _lb_to_kg(n)
-
-
+@reader("promash-text")
 def read(path: str | Path) -> list[Recipe]:
-    text = Path(path).read_text(encoding="utf-8", errors="ignore")
+    text = Path(path).read_text(encoding="utf-8")
+    return [_read_text(chunk) for chunk in text.split("\f") if chunk.strip()]
+
+
+def _read_text(text):
     lines = [l.rstrip() for l in text.splitlines()]
-    recipe = Recipe(name="Untitled", source_format="promash-text", source_metadata={"parser": "line-oriented"})
+    recipe = Recipe(
+        name="Untitled",
+        source_format="promash-text",
+        source_metadata={"parser": "line-oriented"},
+    )
     current = "header"
 
     for raw in lines:
@@ -63,6 +59,15 @@ def read(path: str | Path) -> list[Recipe]:
         if not line:
             continue
         low = line.lower()
+        if low == "notes":
+            current = "notes"
+            recipe.notes = ""
+            continue
+        if current == "notes":
+            if set(line) <= {"-", "="}:
+                continue
+            recipe.notes += ("\n" if recipe.notes else "") + raw
+            continue
         if "promash recipe report" in low:
             current = "header"
             continue
@@ -75,7 +80,7 @@ def read(path: str | Path) -> list[Recipe]:
         if low == "hops" or low.startswith("hops"):
             current = "hops"
             continue
-        if low.startswith("extras") or low.startswith("misc"):
+        if low.startswith(("extras", "misc")):
             current = "miscs"
             continue
         if low.startswith("yeast"):
@@ -98,9 +103,17 @@ def read(path: str | Path) -> list[Recipe]:
             elif key == "date" or "date" in key:
                 recipe.date = val
             elif "batch" in key and "size" in key:
-                recipe.batch_size_l = _gal_to_l(_first_num(val)) if "gal" in val.lower() else _first_num(val)
+                recipe.batch_size_l = (
+                    _gal_to_l(_first_num(val))
+                    if "gal" in val.lower()
+                    else _first_num(val)
+                )
             elif "boil" in key and "size" in key:
-                recipe.boil_size_l = _gal_to_l(_first_num(val)) if "gal" in val.lower() else _first_num(val)
+                recipe.boil_size_l = (
+                    _gal_to_l(_first_num(val))
+                    if "gal" in val.lower()
+                    else _first_num(val)
+                )
             elif "boil" in key and "time" in key:
                 recipe.boil_time_min = _first_num(val)
             elif "efficiency" in key:
@@ -124,22 +137,78 @@ def read(path: str | Path) -> list[Recipe]:
 
         parts = re.split(r"\s{2,}|\t+", line)
         if current == "fermentables" and len(parts) >= 2:
-            amount = _parse_amount(parts[0]) or _parse_amount(line)
+            q = Quantity.parse(parts[0], source_field="line amount")
+            amount = float(q.si_value) if q and q.si_value is not None else None
             name = parts[1] if amount is not None else parts[0]
-            recipe.fermentables.append(FermentableAddition(name=name.strip(), amount_kg=amount, type="Grain", source={"line": line}))
+            recipe.fermentables.append(
+                FermentableAddition(
+                    name=name.strip(), quantity=q, type="Grain", source={"line": line}
+                )
+            )
         elif current == "hops" and len(parts) >= 2:
-            amount = _parse_amount(parts[0]) or _parse_amount(line)
+            q = Quantity.parse(parts[0], source_field="line amount")
+            amount = float(q.si_value) if q and q.si_value is not None else None
             name = parts[1] if amount is not None else parts[0]
             alpha = next((_first_num(p) for p in parts if "%" in p), None)
             time = next((_first_num(p) for p in parts if "min" in p.lower()), None)
-            recipe.hops.append(HopAddition(name=name.strip(), amount_kg=amount, alpha=alpha, time_min=time, use="Boil", source={"line": line}))
+            recipe.hops.append(
+                HopAddition(
+                    name=name.strip(),
+                    quantity=q,
+                    alpha=alpha,
+                    time_min=time,
+                    use=next(
+                        (
+                            p
+                            for p in parts[2:]
+                            if p.lower()
+                            in {
+                                "boil",
+                                "dry hop",
+                                "mash",
+                                "hop stand",
+                                "sparge",
+                                "secondary",
+                                "packaging",
+                            }
+                        ),
+                        "Boil",
+                    ),
+                    source={"line": line},
+                )
+            )
         elif current == "yeast":
-            recipe.yeasts.append(YeastAddition(name=line.strip(), source={"line": line}))
+            q = Quantity.parse(parts[0], source_field="line amount")
+            recipe.yeasts.append(
+                YeastAddition(
+                    name=parts[1] if q and len(parts) > 1 else line.strip(),
+                    quantity=q,
+                    source={"line": line},
+                )
+            )
         elif current == "miscs" and len(line) > 2:
-            recipe.miscs.append(MiscAddition(name=parts[0].strip(), amount=_first_num(line), source={"line": line}))
+            q = Quantity.parse(parts[0], source_field="line amount")
+            recipe.miscs.append(
+                MiscAddition(
+                    name=parts[1] if len(parts) > 1 else parts[0],
+                    quantity=q,
+                    use=parts[3] if len(parts) > 3 else None,
+                    type=parts[2] if len(parts) > 2 else None,
+                    time_min=_first_num(parts[4]) if len(parts) > 4 else None,
+                    source={"line": line},
+                )
+            )
         elif current == "mash":
             temp = _f_to_c(_first_num(line)) if " f" in low else _first_num(line)
             time = next((_first_num(p) for p in parts if "min" in p.lower()), None)
-            recipe.mash_steps.append(MashStep(name=parts[0].strip(), step_temp_c=temp, step_time_min=time, source={"line": line}))
+            recipe.mash_steps.append(
+                MashStep(
+                    name=parts[0].strip(),
+                    step_temp_c=temp,
+                    step_time_min=time,
+                    source={"line": line},
+                )
+            )
 
-    return [recipe]
+    recipe.source_metadata["document"] = text
+    return recipe

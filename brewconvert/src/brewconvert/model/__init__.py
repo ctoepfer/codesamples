@@ -1,5 +1,21 @@
-from .recipe import Recipe, Style, FermentableAddition, HopAddition, YeastAddition, MiscAddition, MashStep
+from .recipe import (
+    FermentableAddition,
+    HopAddition,
+    MashStep,
+    MiscAddition,
+    Recipe,
+    Style,
+    YeastAddition,
+)
+from .units import Quantity
 
 __all__ = [
-    "Recipe", "Style", "FermentableAddition", "HopAddition", "YeastAddition", "MiscAddition", "MashStep",
+    "FermentableAddition",
+    "HopAddition",
+    "MashStep",
+    "MiscAddition",
+    "Quantity",
+    "Recipe",
+    "Style",
+    "YeastAddition",
 ]

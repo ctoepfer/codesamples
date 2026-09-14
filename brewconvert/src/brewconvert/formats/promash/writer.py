@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from brewconvert.formats.boundary import writer
 from brewconvert.model import Recipe
 
 
@@ -11,6 +12,7 @@ def _fmt(value: object | None, suffix: str = "") -> str:
     return f"{value}{suffix}"
 
 
+@writer("promash-text")
 def write(recipes: list[Recipe], path: str | Path, profile: str | None = None) -> None:
     chunks: list[str] = []
     for r in recipes:
@@ -38,19 +40,29 @@ def write(recipes: list[Recipe], path: str | Path, profile: str | None = None) -
             "-------------------",
         ]
         for f in r.fermentables:
-            lines.append(f"{_fmt(f.amount_kg, ' kg'):>12}  {f.name}  {f.type or ''}  {_fmt(f.color_srm, ' SRM')}")
+            lines.append(
+                f"{_fmt(f.amount_kg, ' kg'):>12}  {f.name}  {f.type or ''}  {_fmt(f.color_srm, ' SRM')}"
+            )
         lines += ["", "Hops", "----"]
         for h in r.hops:
-            lines.append(f"{_fmt(h.amount_kg, ' kg'):>12}  {h.name}  {_fmt(h.alpha, ' %')}  {h.use or ''}  {_fmt(h.time_min, ' min')}  {h.form or ''}")
+            lines.append(
+                f"{_fmt(h.amount_kg, ' kg'):>12}  {h.name}  {_fmt(h.alpha, ' %')}  {h.use or ''}  {_fmt(h.time_min, ' min')}  {h.form or ''}"
+            )
         lines += ["", "Yeast", "-----"]
         for y in r.yeasts:
-            lines.append(f"{y.name}  {y.laboratory or ''}  {y.product_id or ''}  {y.form or ''}")
+            lines.append(
+                f"{y.quantity.display() if y.quantity and y.quantity.valid else ''}  {y.name}  {y.laboratory or ''}  {y.product_id or ''}  {y.form or ''}"
+            )
         lines += ["", "Extras", "------"]
         for m in r.miscs:
-            lines.append(f"{_fmt(m.amount):>12}  {m.name}  {m.type or ''}  {m.use or ''}  {_fmt(m.time_min, ' min')}")
+            lines.append(
+                f"{m.quantity.display() if m.quantity and m.quantity.valid else '':>12}  {m.name}  {m.type or ''}  {m.use or ''}  {_fmt(m.time_min, ' min')}"
+            )
         lines += ["", "Mash Schedule", "-------------"]
         for s in r.mash_steps:
-            lines.append(f"{s.name}  {_fmt(s.step_temp_c, ' C')}  {_fmt(s.step_time_min, ' min')}  {s.type or ''}")
+            lines.append(
+                f"{s.name}  {_fmt(s.step_temp_c, ' C')}  {_fmt(s.step_time_min, ' min')}  {s.type or ''}"
+            )
         lines += ["", "Notes", "-----", r.notes or ""]
         chunks.append("\n".join(lines))
     Path(path).write_text("\n\n\f\n\n".join(chunks) + "\n", encoding="utf-8")

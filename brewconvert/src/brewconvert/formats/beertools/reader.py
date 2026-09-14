@@ -4,11 +4,21 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
-from brewconvert.model import Recipe, Style, FermentableAddition, HopAddition, YeastAddition, MiscAddition, MashStep
+from brewconvert.formats.boundary import reader
+from brewconvert.model import (
+    FermentableAddition,
+    HopAddition,
+    MashStep,
+    MiscAddition,
+    Recipe,
+    Style,
+    YeastAddition,
+)
+from brewconvert.model.units import Quantity, first_present
 
 
 def _local(tag: str) -> str:
-    return tag.split('}', 1)[-1] if '}' in tag else tag
+    return tag.split("}", 1)[-1] if "}" in tag else tag
 
 
 def _child(el: ET.Element | None, name: str) -> ET.Element | None:
@@ -52,44 +62,49 @@ def _unit(el: ET.Element | None, name: str | None = None) -> str | None:
     return u.lower() if u else None
 
 
-def _quantity(el: ET.Element | None, name: str, kind: str | None = None) -> float | None:
+def _quantity(
+    el: ET.Element | None, name: str, kind: str | None = None
+) -> float | None:
     target = _child(el, name)
     n = _num(target)
     if n is None:
         return None
     u = _unit(target)
-    if kind == "mass":
-        if u in {"g", "gram", "grams"}:
-            return n / 1000
-        if u in {"lb", "lbs", "pound", "pounds"}:
-            return n * 0.45359237
-        if u in {"oz", "ounce", "ounces"}:
-            return n * 0.028349523125
-    if kind == "volume":
-        if u in {"gal", "gallon", "gallons"}:
-            return n * 3.785411784
-        if u in {"ml"}:
-            return n / 1000
-        if u in {"fl oz"}:
-            return n * 0.0295735295625
-    if kind == "temp":
-        if u in {"f", "°f"}:
-            return (n - 32) * 5 / 9
+    if kind in {"mass", "volume"}:
+        q = Quantity(n, u)
+        return float(q.si_value) if q.kind == kind and q.si_value is not None else None
+    if kind == "temp" and u in {"f", "°f"}:
+        return (n - 32) * 5 / 9
     return n
 
 
 def _children_as_dict(el: ET.Element | None) -> dict[str, Any]:
     if el is None:
         return {}
-    return {_local(c.tag): ''.join(c.itertext()).strip() for c in list(el)}
+    return {_local(c.tag): "".join(c.itertext()).strip() for c in list(el)}
 
 
 def _findall_local(root: ET.Element, name: str) -> list[ET.Element]:
     return [e for e in root.iter() if _local(e.tag) == name]
 
 
+def _typed(el):
+    measure = _child(el, "Quantity")
+    value = _text(measure, "Value")
+    return Quantity.from_measure(
+        value, _text(measure, "Unit"), source_field="Quantity/Value/Unit"
+    )
+
+
+@reader("beertools-btp")
 def read(path: str | Path) -> list[Recipe]:
     root = ET.parse(path).getroot()
+    if _local(root.tag) == "Recipes":
+        return [_read_root(child) for child in root if _local(child.tag) == "Recipe"]
+    return [_read_root(root)]
+
+
+def _read_root(root):
     if _local(root.tag) != "Recipe":
         raise ValueError("Not a BeerTools Pro Recipe XML document")
 
@@ -105,7 +120,12 @@ def read(path: str | Path) -> list[Recipe]:
         est_fg=_quantity(root, "TGReading"),
         est_og=_quantity(root, "OGReading"),
         source_format="beertools-btp",
-        source_metadata={"version": root.attrib.get("version"), "namespace": root.tag.split('}')[0][1:] if root.tag.startswith('{') else None},
+        source_metadata={
+            "version": root.attrib.get("version"),
+            "namespace": root.tag.split("}")[0][1:]
+            if root.tag.startswith("{")
+            else None,
+        },
     )
 
     style_el = _child(root, "Style")
@@ -125,57 +145,115 @@ def read(path: str | Path) -> list[Recipe]:
         stage = _text(item, "Stage")
         duration = _quantity(item, "Duration")
         if kind in {"Grain", "Extract", "Adjunct"}:
-            recipe.fermentables.append(FermentableAddition(
-                name=name,
-                amount_kg=_quantity(item, "Quantity", "mass"),
-                type="Extract" if kind == "Extract" else "Adjunct" if kind == "Adjunct" else "Grain",
-                yield_pct=_quantity(item, "DryBasisFineGrind") or _quantity(item, "Yield"),
-                color_srm=_quantity(item, "Color"),
-                source=_children_as_dict(item),
-            ))
+            recipe.fermentables.append(
+                FermentableAddition(
+                    name=name,
+                    quantity=_typed(item),
+                    type="Extract"
+                    if kind == "Extract"
+                    else "Adjunct"
+                    if kind == "Adjunct"
+                    else "Grain",
+                    use=stage,
+                    yield_pct=_quantity(item, "DryBasisFineGrind")
+                    if _quantity(item, "DryBasisFineGrind") is not None
+                    else _quantity(item, "Yield"),
+                    color_srm=_quantity(item, "Color"),
+                    source=_children_as_dict(item),
+                )
+            )
         elif kind == "Hop":
-            recipe.hops.append(HopAddition(
-                name=name,
-                amount_kg=_quantity(item, "Quantity", "mass"),
-                alpha=_quantity(item, "Alpha"),
-                use=stage,
-                time_min=duration,
-                form=_text(item, "Form"),
-                source=_children_as_dict(item),
-            ))
+            recipe.hops.append(
+                HopAddition(
+                    name=name,
+                    quantity=_typed(item),
+                    alpha=_quantity(item, "Alpha"),
+                    use=stage,
+                    time_min=duration,
+                    form=_text(item, "Form"),
+                    source=_children_as_dict(item),
+                )
+            )
         elif kind == "Yeast":
             low = _quantity(item, "AttenuationLow")
             high = _quantity(item, "AttenuationHigh")
-            attenuation = (low + high) / 2 if low is not None and high is not None else low or high
-            recipe.yeasts.append(YeastAddition(
-                name=name,
-                laboratory=_text(item, "Supplier") or _text(item, "Origin"),
-                product_id=_text(item, "CatalogNumber") or _text(item, "Code"),
-                type=_text(item, "Type"),
-                form=_text(item, "Medium"),
-                amount=_quantity(item, "Quantity"),
-                attenuation=attenuation,
-                source=_children_as_dict(item),
-            ))
+            attenuation = (
+                (low + high) / 2
+                if low is not None and high is not None
+                else low
+                if low is not None
+                else high
+            )
+            recipe.yeasts.append(
+                YeastAddition(
+                    name=name,
+                    laboratory=_text(item, "Supplier") or _text(item, "Origin"),
+                    product_id=_text(item, "CatalogNumber") or _text(item, "Code"),
+                    type=_text(item, "Type"),
+                    form=_text(item, "Medium"),
+                    quantity=_typed(item),
+                    use=stage,
+                    attenuation=attenuation,
+                    source=_children_as_dict(item),
+                )
+            )
         else:
-            recipe.miscs.append(MiscAddition(
-                name=name,
-                amount=_quantity(item, "Quantity"),
-                time_min=duration,
-                type=kind,
-                use=stage,
-                source=_children_as_dict(item),
-            ))
+            recipe.miscs.append(
+                MiscAddition(
+                    name=name,
+                    quantity=_typed(item),
+                    time_min=duration,
+                    type=kind,
+                    use=stage,
+                    source=_children_as_dict(item),
+                )
+            )
 
     for s in _findall_local(root, "Mash") + _findall_local(root, "Rest"):
-        if _local(s.tag) == "Mash" and not _text(s, "Name") and not _child(s, "Temperature"):
+        if (
+            _local(s.tag) == "Mash"
+            and not _text(s, "Name")
+            and _child(s, "Temperature") is None
+        ):
             continue
-        recipe.mash_steps.append(MashStep(
-            name=_text(s, "Name") or "Mash Step",
-            type=_local(s.tag),
-            step_time_min=_quantity(s, "Duration"),
-            step_temp_c=_quantity(s, "Temperature", "temp") or _quantity(s, "Temp", "temp"),
-            source=_children_as_dict(s),
-        ))
+        recipe.mash_steps.append(
+            MashStep(
+                name=_text(s, "Name") or "Mash Step",
+                type=_local(s.tag),
+                step_time_min=_quantity(s, "Duration"),
+                step_temp_c=first_present(
+                    _quantity(s, "Temperature", "temp"), _quantity(s, "Temp", "temp")
+                ),
+                source=_children_as_dict(s),
+            )
+        )
 
-    return [recipe]
+    known = {
+        "Name",
+        "Author",
+        "Date",
+        "Notes",
+        "Description",
+        "FinalVolume",
+        "KettleVolume",
+        "BoilDuration",
+        "BrewHouseYield",
+        "Style",
+        "Ingredients",
+        "Schedule",
+        "OGReading",
+        "TGReading",
+    }
+    recipe.unknown_fields = {
+        _local(c.tag): ET.tostring(c, encoding="unicode")
+        for c in root
+        if _local(c.tag) not in known
+    }
+    recipe.source_metadata["document"] = ET.tostring(root, encoding="unicode")
+    recipe.measured_values = {
+        k: _quantity(root, k)
+        for k in ("OGReading", "TGReading")
+        if _quantity(root, k) is not None
+    }
+    recipe.est_og = recipe.est_fg = None
+    return recipe

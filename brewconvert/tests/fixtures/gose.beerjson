@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "recipes": [{
+    "name": "Framboisé Gose — regression",
+    "batch_size": {"value": 100, "unit": "L"},
+    "boil": {"duration": {"value": 60, "unit": "min"}},
+    "notes": "Mash 65 °C; pH 5.2–5.4; condition 3–4 weeks; CO₂.",
+    "ingredients": {
+      "fermentable_additions": [{"name": "Raspberries", "type": "Fruit", "amount": {"value": 29.17, "unit": "lb"}}],
+      "hop_additions": [{"name": "Saaz", "amount": {"value": 20, "unit": "g"}, "timing": {"use": "Boil", "time": {"value": 70, "unit": "min"}}}],
+      "miscellaneous_additions": [
+        {"name": "Sea salt", "type": "Salt", "amount": {"value": 2.92, "unit": "oz"}, "timing": {"use": "Boil"}},
+        {"name": "Coriander", "type": "Spice", "amount": {"value": 5.83, "unit": "oz"}, "timing": {"use": "Boil"}},
+        {"name": "Gypsum", "type": "Water Agent", "amount": {"value": 2, "unit": "g"}, "timing": {"use": "Mash"}},
+        {"name": "Gypsum", "type": "Water Agent", "amount": {"value": 3, "unit": "g"}, "timing": {"use": "Sparge"}}
+      ],
+      "culture_additions": [{"name": "Liquid culture", "form": "Liquid", "amount": {"value": 125, "unit": "mL"}}]
+    }
+  }]
+}

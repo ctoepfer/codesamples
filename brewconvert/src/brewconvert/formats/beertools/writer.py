@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.dom import minidom
 
+from brewconvert.formats.boundary import writer
 from brewconvert.model import Recipe
 
 NS = "http://www.beertools.com/btp"
@@ -21,15 +22,21 @@ def _add(parent: ET.Element, name: str, value: object | None = None) -> ET.Eleme
     return el
 
 
-def _measure(parent: ET.Element, name: str, value: float | None, unit: str) -> ET.Element:
+def _measure(
+    parent: ET.Element, name: str, value: float | None, unit: str
+) -> ET.Element:
+    if value is None:
+        return None
     el = _add(parent, name)
-    _add(el, "Text", "" if value is None else value)
-    _add(el, "Value", 0 if value is None else value)
+    _add(el, "Text", value)
+    _add(el, "Value", value)
     _add(el, "Unit", unit)
     return el
 
 
-def _ingredient(parent: ET.Element, kind: str, name: str, amount: float | None, unit: str = "kg") -> ET.Element:
+def _ingredient(
+    parent: ET.Element, kind: str, name: str, amount: float | None, unit: str = "kg"
+) -> ET.Element:
     el = ET.SubElement(parent, _tag(kind))
     _add(el, "Active", "Y")
     _add(el, "Name", name)
@@ -52,22 +59,35 @@ def _one_recipe(r: Recipe) -> ET.Element:
     ingredients = _add(root, "Ingredients")
 
     for f in r.fermentables:
-        kind = "Extract" if (f.type or "").lower() == "extract" else "Adjunct" if (f.type or "").lower() == "adjunct" else "Grain"
+        kind = (
+            "Extract"
+            if (f.type or "").lower() == "extract"
+            else "Adjunct"
+            if (f.type or "").lower() == "adjunct"
+            else "Grain"
+        )
         el = _ingredient(ingredients, kind, f.name, f.amount_kg, "kg")
-        _add(el, "Stage", "Mash")
+        _add(el, "Stage", f.use)
         _measure(el, "Duration", 0, "min")
         _measure(el, "DryBasisFineGrind", f.yield_pct, "%")
         _measure(el, "Color", f.color_srm, "SRM")
 
     for h in r.hops:
         el = _ingredient(ingredients, "Hop", h.name, h.amount_kg, "kg")
-        _add(el, "Stage", h.use or "Boil")
+        _add(el, "Stage", h.use)
         _measure(el, "Duration", h.time_min, "min")
         _add(el, "Form", h.form or "Pellet")
         _measure(el, "Alpha", h.alpha, "%")
 
     for y in r.yeasts:
-        el = _ingredient(ingredients, "Yeast", y.name, y.amount, "unit")
+        el = _ingredient(
+            ingredients,
+            "Yeast",
+            y.name,
+            y.quantity.value if y.quantity and y.quantity.measure() else None,
+            y.quantity.unit if y.quantity else "count",
+        )
+        _add(el, "Stage", y.use)
         _add(el, "Supplier", y.laboratory or "")
         _add(el, "CatalogNumber", y.product_id or "")
         _add(el, "Type", y.type or "")
@@ -76,7 +96,13 @@ def _one_recipe(r: Recipe) -> ET.Element:
         _measure(el, "AttenuationHigh", y.attenuation, "%")
 
     for m in r.miscs:
-        el = _ingredient(ingredients, "Special", m.name, m.amount, "unit")
+        el = _ingredient(
+            ingredients,
+            "Special",
+            m.name,
+            m.quantity.value if m.quantity and m.quantity.measure() else None,
+            m.quantity.unit if m.quantity else "count",
+        )
         _add(el, "Stage", m.use or "")
         _measure(el, "Duration", m.time_min, "min")
 
@@ -93,12 +119,12 @@ def _one_recipe(r: Recipe) -> ET.Element:
         _add(mash, "Name", s.name)
         _measure(mash, "Temperature", s.step_temp_c, "C")
         _measure(mash, "Duration", s.step_time_min, "min")
-    _measure(root, "OGReading", r.est_og, "sg")
-    _measure(root, "TGReading", r.est_fg, "sg")
+
     _add(root, "Notes", r.notes or "")
     return root
 
 
+@writer("beertools-btp")
 def write(recipes: list[Recipe], path: str | Path, profile: str | None = None) -> None:
     if len(recipes) == 1:
         root = _one_recipe(recipes[0])
