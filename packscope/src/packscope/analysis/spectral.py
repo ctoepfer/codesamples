@@ -11,7 +11,7 @@ from scipy.integrate import trapezoid
 from scipy.signal import welch
 
 from packscope.analysis.quality import EegQualityConfig, assess_eeg_quality
-from packscope.models import EegFrame, MetricResult, MetricStatus
+from packscope.models import EegFrame, MetricReason, MetricResult, MetricStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,7 +23,7 @@ class FrequencyBand:
     high_hz: float
 
     def __post_init__(self) -> None:
-        if self.low_hz <= 0.0 or self.high_hz <= self.low_hz:
+        if not all(math.isfinite(v) for v in (self.low_hz, self.high_hz)) or not 0 < self.low_hz < self.high_hz:
             raise ValueError("Frequency bands require 0 < low_hz < high_hz.")
 
 
@@ -53,10 +53,14 @@ def band_power(
             name=f"{band.name}_power:{channel_name}",
             status=MetricStatus.INSUFFICIENT_SAMPLES,
             value=None,
-            reason="At least eight samples are required for PSD estimation.",
+            reason=MetricReason.INSUFFICIENT_PSD_SAMPLES,
         )
 
-    segment = min(nperseg or int(round(frame.sampling_rate_hz)), frame.samples.shape[1])
+    if (nperseg is not None and (not isinstance(nperseg, int) or nperseg < 2)
+            or band.high_hz > frame.sampling_rate_hz / 2):
+        return MetricResult(f"{band.name}_power:{channel_name}", MetricStatus.INVALID_INPUT, None,
+                            MetricReason.INVALID_PSD_CONFIGURATION)
+    segment = min(nperseg or max(2, int(round(frame.sampling_rate_hz))), frame.samples.shape[1])
     frequencies, density = welch(frame.samples[index], fs=frame.sampling_rate_hz, nperseg=segment, detrend="constant")
     mask = (frequencies >= band.low_hz) & (frequencies <= band.high_hz)
     if not np.any(mask):
@@ -64,7 +68,7 @@ def band_power(
             name=f"{band.name}_power:{channel_name}",
             status=MetricStatus.INVALID_INPUT,
             value=None,
-            reason="The Welch frequency grid does not cover the requested band.",
+            reason=MetricReason.BAND_NOT_COVERED,
         )
     # PSD is density per Hertz, so integrate rather than average it. Averaging
     # would make the value depend on the number of frequency-grid bins in a
@@ -75,7 +79,7 @@ def band_power(
             name=f"{band.name}_power:{channel_name}",
             status=MetricStatus.INVALID_INPUT,
             value=None,
-            reason="Band-power estimate is not a positive finite number.",
+            reason=MetricReason.INVALID_BAND_POWER,
         )
     return MetricResult(
         name=f"{band.name}_power:{channel_name}",
@@ -118,7 +122,7 @@ def frontal_alpha_asymmetry(
             status=(
                 MetricStatus.INSUFFICIENT_CHANNELS
                 if MetricStatus.INSUFFICIENT_CHANNELS in {left.status, right.status}
-                else MetricStatus.INSUFFICIENT_SAMPLES
+                else next(r.status for r in (left, right) if r.status != MetricStatus.AVAILABLE)
             ),
             value=None,
             reason=missing,
@@ -162,10 +166,14 @@ def beta_to_theta_power_ratio(
             value=None,
             reason=unavailable.reason,
         )
+    ratio = float(beta.value / theta.value)
+    if not math.isfinite(ratio):
+        return MetricResult(f"beta_to_theta_power_ratio:{channel_name}", MetricStatus.INVALID_INPUT, None,
+                            MetricReason.NON_FINITE_RATIO)
     return MetricResult(
         name=f"beta_to_theta_power_ratio:{channel_name}",
         status=MetricStatus.AVAILABLE,
-        value=float(beta.value / theta.value),
+        value=ratio,
         details={"channel": channel_name.upper()},
     )
 

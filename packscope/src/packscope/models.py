@@ -21,6 +21,16 @@ class MetricStatus(StrEnum):
     INVALID_INPUT = "invalid_input"
 
 
+class MetricReason(StrEnum):
+    """Stable explanations for common unavailable numeric measurements."""
+
+    INSUFFICIENT_PSD_SAMPLES = "At least eight samples are required for PSD estimation."
+    INVALID_PSD_CONFIGURATION = "Band must fit below Nyquist and nperseg must be an integer >= 2."
+    BAND_NOT_COVERED = "The Welch frequency grid does not cover the requested band."
+    INVALID_BAND_POWER = "Band-power estimate is not a positive finite number."
+    NON_FINITE_RATIO = "Power ratio is not finite."
+
+
 @dataclass(frozen=True, slots=True)
 class MetricResult:
     """A transparent derived value that carries availability and provenance context."""
@@ -28,12 +38,14 @@ class MetricResult:
     name: str
     status: MetricStatus
     value: float | None
-    reason: str | None = None
+    reason: str | MetricReason | None = None
     details: Mapping[str, float | int | str | bool] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.status == MetricStatus.AVAILABLE and self.value is None:
             raise ValueError("An available metric must contain a numeric value.")
+        if self.status != MetricStatus.AVAILABLE and not self.reason:
+            raise ValueError("An unavailable metric must explain its reason.")
         if self.status != MetricStatus.AVAILABLE and self.value is not None:
             raise ValueError("An unavailable metric must not contain a numeric value.")
         if self.value is not None and not np.isfinite(self.value):
@@ -93,6 +105,8 @@ class EegFrame:
         timestamps = np.asarray(self.timestamps_monotonic_s, dtype=np.float64)
         if samples.ndim != 2:
             raise ValueError("EEG samples must have shape (channels, samples).")
+        if samples.shape[0] == 0:
+            raise ValueError("EEG frames require at least one explicitly named channel.")
         if samples.shape[0] != len(self.channel_names):
             raise ValueError("channel_names must match the first sample dimension.")
         if samples.shape[1] != timestamps.size:

@@ -40,7 +40,7 @@ def detect_fixations(
     detector is a transparent default, not a substitute for a tracker-specific
     validated event classifier. Parameters should be retained in the session record.
     """
-    if max_dispersion_norm <= 0.0 or min_duration_s <= 0.0 or max_sample_gap_s <= 0.0:
+    if any(not np.isfinite(v) or v <= 0 for v in (max_dispersion_norm, min_duration_s, max_sample_gap_s)):
         raise ValueError("Fixation thresholds must be positive.")
     _validate_time_order(samples)
     fixations: list[Fixation] = []

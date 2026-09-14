@@ -11,10 +11,11 @@ import json
 import os
 import tempfile
 from collections.abc import Iterable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from packscope.errors import ConfigurationError
 
@@ -75,15 +76,32 @@ class SessionManifest:
     created_at_utc: str
     notes: str = ""
 
+    quality_flags: tuple[str, ...] = ()
+    calibration_id: str | None = None
+
     def write_json(self, destination: Path) -> None:
-        """Atomically persist the manifest to avoid partial provenance files."""
-        if not self.session_id or not self.stimulus_id or not self.stimulus_sha256:
-            raise ConfigurationError("session_id, stimulus_id, and stimulus_sha256 are required.")
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        payload = asdict(self)
-        payload["consent"]["granted_scopes"] = sorted(scope.value for scope in self.consent.granted_scopes)
+        """Atomically persist provenance, preserving the original top-level schema."""
+        from packscope.io.serialization import ExportMetadata, to_dict
+
+        metadata = ExportMetadata(self.stimulus_sha256, self.software_version, self.quality_flags,
+                                  self.calibration_id, tuple(sorted(s.value for s in self.consent.granted_scopes)))
+        envelope = to_dict(self, metadata)
+        payload = envelope["data"] | envelope["metadata"] | {"schema_version": 1}
+        atomic_write_json(destination, payload)
+
+
+def atomic_write_json(destination: Path, payload: Any) -> None:
+    """Validate JSON before writing and clean temporary files if replacement fails."""
+    text = json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = None
+    try:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False, dir=destination.parent) as temporary:
-            json.dump(payload, temporary, indent=2, sort_keys=True)
-            temporary.write("\n")
             temporary_path = Path(temporary.name)
+            temporary.write(text)
+            temporary.flush()
+            os.fsync(temporary.fileno())
         os.replace(temporary_path, destination)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import numpy as np
@@ -52,3 +53,26 @@ def test_beta_theta_ratio_is_signal_derived_not_cognitive_label() -> None:
     assert result.status == MetricStatus.AVAILABLE
     assert result.name == "beta_to_theta_power_ratio:C3"
     assert result.value is not None and result.value > 2.0
+
+
+def test_invalid_psd_configuration_returns_reason() -> None:
+    from packscope.analysis.spectral import ALPHA, band_power
+    from packscope.models import MetricReason
+
+    time = np.arange(1000) / 250
+    frame = _frame(("F3",), [np.sin(2 * np.pi * 10 * time)])
+    result = band_power(frame, "F3", ALPHA, nperseg=-1)
+    assert result.status == MetricStatus.INVALID_INPUT
+    assert result.value is None
+    assert result.reason == MetricReason.INVALID_PSD_CONFIGURATION
+
+
+def test_nonfinite_band_power_is_unavailable() -> None:
+    from packscope.analysis.spectral import ALPHA, band_power
+
+    time = np.arange(1000) / 250
+    frame = _frame(("F3",), [1e200 * np.sin(2 * np.pi * 10 * time)])
+    with np.errstate(over="ignore", invalid="ignore"):
+        result = band_power(frame, "F3", ALPHA)
+    assert result.status == MetricStatus.INVALID_INPUT
+    assert result.value is None and result.reason

@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 # PackScope
 
 *Seeing what the data can — and cannot — tell us.*
@@ -577,3 +578,82 @@ Copyright 2026 PackScope contributors. Licensed under the [Apache License 2.0](L
 [7]: https://pmc.ncbi.nlm.nih.gov/articles/PMC11225961/ "Guidelines for minimum reporting of eye-tracking studies"
 [8]: https://pmc.ncbi.nlm.nih.gov/articles/PMC10794660/ "Challenges in EEG-based emotion recognition"
 [9]: https://github.com/esdalmaijer/PyGaze "PyGaze Source Repository"
+
+## Quick Synthetic Demo
+
+From the `packscope` directory:
+
+```bash
+python -m pip install -e '.[dev]'
+python examples/quickstart_synthetic_demo.py
+```
+
+This deterministic demo uses only the NumPy/SciPy core, with no hardware, camera,
+network service, or optional binary device libraries. It prints alpha/beta PSD,
+FAA, independently detected fixation dwell by versioned ROI, and rejection counts.
+Synthetic amplitudes are arbitrary units; the generated F3/F4 labels explicitly
+identify simulated channels. No physical device locations are inferred.
+
+```python
+from packscope.pipeline.runner import SessionRunner
+from packscope.testing.synthetic import generate_eeg_frames, generate_gaze_samples
+
+summary = SessionRunner().run(generate_eeg_frames(), generate_gaze_samples(), rois=[])
+print(summary.faa_metrics[0].result)
+```
+
+Each input EEG frame is one analysis window. Frames must be ordered and
+non-overlapping, and gaze must use the same monotonic clock. Short final frames
+remain visible as rejected windows. Gaze with missing calibration, declared quality
+flags, or invalid coordinates is excluded from fixation attribution without bridging
+its dropout. ROI attribution retains failed FAA windows with their unavailable
+status; dwell is a separate gaze measurement. Empty streams produce empty tables.
+
+## Offline CLI and JSON provenance
+
+```bash
+packscope doctor
+packscope validate-manifest session.json
+packscope run-quality-gates eeg.csv --sampling-rate-hz 250 --max-absolute-amplitude 100
+packscope compute-faa eeg.json --window-s 4
+python -m pip install -e '.[reporting]'
+packscope generate-heatmap gaze.json --output heatmap.png
+```
+
+`doctor` checks installed module availability; it does not connect to hardware or
+certify driver readiness. CSV EEG logs require a `timestamp_monotonic_s` column and
+one explicitly named column per channel, plus `--sampling-rate-hz`. Values use the
+source's documented units. All other CSV columns are channel values. Quality-gate
+output lists accepted window indices, rejected windows/samples, flags, and both
+rejection ratios. An empty log has null ratios. Malformed records fail with an
+error instead of being silently discarded. FAA prints a `MetricResult` for every
+window, including unavailable results. Both commands retain partial windows.
+
+EEG JSON accepts one raw `EegFrame` dictionary, a list of dictionaries, or
+`{"frames": [...]}`. Each frame requires `samples` (channels by samples),
+`timestamps_monotonic_s`, `channel_names`, `sampling_rate_hz`, `source`, and
+`device_id`; `quality_flags` and `metadata` are optional. Gaze JSON accepts a list
+of `GazeSample` dictionaries or `{"samples": [...]}` with the model's exact field
+names. Both readers also accept versioned serialization envelopes for individual
+records. Heatmaps use calibrated valid samples and normalized top-left coordinates.
+
+`packscope.io.serialization` provides `dumps`/`loads`, `to_dict`/`from_dict`, and
+atomic `write_json`/`read_json` for EEG, gaze, metrics, and session manifests. Exports
+use a version-one envelope with `schema_version`, `type`, `metadata`, and `data`.
+Every export requires `ExportMetadata(stimulus_hash, software_version,
+quality_flags, calibration_id, consent_scopes)`. The hash is a SHA-256 hex digest;
+null calibration explicitly records that none applies. Empty flags/scopes must be
+explicit arrays, and scopes must be known `ConsentScope` values. Metadata cannot
+contradict calibration, omit record quality flags, or contradict manifest consent.
+Provenance records permissions; serialization does not itself grant consent.
+`SessionManifest.write_json` retains its original top-level fields and adds the
+mandatory metadata; `validate-manifest` accepts this format and manifest envelopes.
+Legacy manifests need those fields populated from actual session records.
+
+Optional EEG gates include `--saturation-amplitude` with
+`--max-saturation-fraction`, `--flatline-duration-s`, and
+`--max-line-noise-ratio` with `--line-noise-hz 50` (or `60`). Mains ratio is the
+fraction of non-DC Hann-windowed periodogram power within ±1 Hz of mains frequency,
+assessed per channel. Unresolvable mains frequencies fail the enabled gate.
+Amplitude thresholds use device units; defaults cannot establish signal validity.
+The minimum window duration counts sample periods (`sample_count / sampling_rate`).
