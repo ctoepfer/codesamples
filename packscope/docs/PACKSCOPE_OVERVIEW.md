@@ -8,6 +8,8 @@ The answer is **yes — with some important limits**.
 
 PackScope is a local-first Python toolkit for collecting, aligning, quality-checking, and analyzing gaze and EEG data around versioned visual stimuli such as labels, packages, ads, and other design treatments. It is designed to make useful comparisons between variants while preserving provenance, uncertainty, and the distinction between **what was measured** and **what we think it might mean**.
 
+Historically, this kind of combined eye-tracking and EEG research has largely lived in the world of **large consumer brands, specialized market-research and neuromarketing firms, and well-equipped academic or corporate labs**—organizations with the budgets for dedicated hardware, proprietary analysis platforms, and commissioned studies. PackScope explores what happens when some of those tools and methods are made accessible to **homebrewers, small breweries, independent package designers, and curious makers** using open software and comparatively approachable hardware. It is not intended to turn a hobbyist setup into a commercial neuroscience laboratory; the goal is to make careful, useful experimentation possible without hiding the limitations of the equipment or the evidence.
+
 > **PackScope does not read minds.** It does not diagnose emotion, determine intent, predict purchases, or prove that a package element caused a neurological response. Its purpose is to provide transparent, quality-gated evidence that can be used alongside traditional design research.
 
 ![Participant viewing packaging variants while EEG and gaze data are recorded](images/gpt-image-2.5-sunburst_Sophisticated_editorial_scientific_illustration_for_an_open-source_research_proj-0.jpg)
@@ -48,7 +50,7 @@ flowchart LR
 
 ## What We Measure
 
-The original neuromarketing model that helped inspire this project used a simple two-axis map of "emotional response" and "cognitive response." That kind of visualization can be useful for generating hypotheses, but PackScope deliberately avoids treating those axes as directly measurable psychological facts.
+It is tempting to reduce physiological and gaze measurements to simple axes such as "emotional response" or "cognitive response." Visualizations like that can be useful for generating hypotheses, but PackScope deliberately avoids treating broad psychological labels as directly measurable facts.
 
 Instead, PackScope works with observable or explicitly derived quantities.
 
