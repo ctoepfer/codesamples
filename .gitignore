@@ -1,1 +1,4 @@
-docs/hardware/
+# Internal, unreviewed hardware interoperability research.
+docs/hardware_internal/
+
+# docs/hardware/ is intentionally public and must remain trackable.

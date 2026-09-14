@@ -1,0 +1,234 @@
+# PackScope hardware setup — choose ONE EEG route and ONE gaze route per session.
+# Solid links: physical/data connections. Dashed links: participant-facing optical/wear paths.
+# Verify all pinouts, voltage levels, battery isolation, and electrode instructions
+# against the exact device revision before connecting hardware.
+
+direction: down
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 0
+    pad: 36
+  }
+}
+
+classes: {
+  person: {
+    style: {
+      fill: "#FFF7ED"
+      stroke: "#C2410C"
+      stroke-width: 2
+      font-color: "#431407"
+      bold: true
+    }
+  }
+  device: {
+    style: {
+      fill: "#EFF6FF"
+      stroke: "#2563EB"
+      stroke-width: 2
+      font-color: "#172554"
+    }
+  }
+  optional: {
+    style: {
+      fill: "#F8FAFC"
+      stroke: "#64748B"
+      stroke-width: 1
+      stroke-dash: 3
+      font-color: "#334155"
+    }
+  }
+  software: {
+    style: {
+      fill: "#F0FDF4"
+      stroke: "#15803D"
+      stroke-width: 2
+      font-color: "#14532D"
+    }
+  }
+  warning: {
+    style: {
+      fill: "#FEF2F2"
+      stroke: "#B91C1C"
+      stroke-width: 2
+      font-color: "#7F1D1D"
+    }
+  }
+}
+
+study_station: "Study station" {
+  direction: right
+
+  display: "Packaging stimulus display\nLaptop / monitor\n• fixed resolution & scale\n• label/ad variants + calibration targets" {
+    class: device
+  }
+
+  participant: "Participant" {
+    shape: person
+    class: person
+  }
+
+  gaze: "Gaze route — choose ONE" {
+    direction: down
+    webcam: "USB webcam\nfixed above/below display\nMediaPipe features +\nper-session display calibration" {
+      class: device
+    }
+    tracker: "Dedicated eye tracker\nUSB / Ethernet / vendor host\nexternal or LSL adapter" {
+      class: optional
+    }
+  }
+
+  display -> participant: "views stimulus +\ncalibration targets" {
+    style.stroke: "#C2410C"
+    style.stroke-dash: 3
+  }
+  participant -> gaze.webcam: "eyes / face in camera view" {
+    style.stroke: "#C2410C"
+    style.stroke-dash: 3
+  }
+  participant -> gaze.tracker: "eye position" {
+    style.stroke: "#C2410C"
+    style.stroke-dash: 3
+  }
+}
+
+eeg_routes: "EEG route — choose ONE" {
+  direction: right
+
+  arduino_path: "A. MindFlex + Arduino Brain bridge" {
+    direction: down
+    headset: "MindFlex / compatible\nThinkGear headset\nsingle dry electrode + reference" {
+      class: device
+    }
+    arduino: "Arduino running\nkitschpatrol Brain library\noutputs readCSV()" {
+      class: device
+    }
+    host_usb: "USB data cable\nArduino → workstation" {
+      class: device
+    }
+    headset -> arduino: "ThinkGear UART\nheadset TX → Arduino RX\nshared GND; verify voltage levels" {
+      style.stroke: "#7C3AED"
+      style.stroke-width: 2
+    }
+    arduino -> host_usb: "USB serial CSV\n11 fields; baud = sketch setting" {
+      style.stroke: "#7C3AED"
+      style.stroke-width: 2
+    }
+  }
+
+  direct_path: "B. Direct ThinkGear serial" {
+    direction: down
+    headset: "MindFlex / NeuroSky\nThinkGear headset" {
+      class: device
+    }
+    bridge: "User-built UART / Bluetooth SPP\nbridge or serial adapter\nno vendor SDK required" {
+      class: device
+    }
+    host_serial: "Host serial interface\nUSB serial or Bluetooth SPP" {
+      class: device
+    }
+    headset -> bridge: "ThinkGear UART\n0xAA packet stream\nverify voltage levels" {
+      style.stroke: "#7C3AED"
+      style.stroke-width: 2
+    }
+    bridge -> host_serial: "USB or Bluetooth serial" {
+      style.stroke: "#7C3AED"
+      style.stroke-width: 2
+    }
+  }
+
+  openbci_path: "C. OpenBCI raw multichannel" {
+    direction: down
+    cap: "Electrode cap / headset\nmap physical sites explicitly\nF3 + F4 required for FAA" {
+      class: device
+    }
+    board: "OpenBCI Cyton / Ganglion\nportable battery-powered board" {
+      class: device
+    }
+    dongle: "OpenBCI USB dongle /\nboard-specific host link" {
+      class: device
+    }
+    cap -> board: "electrode leads\nrecord montage + reference\n+ contact / impedance checks" {
+      style.stroke: "#7C3AED"
+      style.stroke-width: 2
+    }
+    board -> dongle: "board-specific wireless link" {
+      style.stroke: "#7C3AED"
+      style.stroke-width: 2
+    }
+  }
+}
+
+# The participant wears only the device from the selected EEG path.
+study_station.participant -> eeg_routes.arduino_path.headset: "wear" {
+  style.stroke: "#C2410C"
+  style.stroke-dash: 3
+}
+study_station.participant -> eeg_routes.direct_path.headset: "wear" {
+  style.stroke: "#C2410C"
+  style.stroke-dash: 3
+}
+study_station.participant -> eeg_routes.openbci_path.cap: "wear" {
+  style.stroke: "#C2410C"
+  style.stroke-dash: 3
+}
+
+workstation: "Local PackScope workstation" {
+  direction: right
+
+  packscope: "PackScope\nPython acquisition + quality gates\nlocal session manifest" {
+    class: software
+  }
+  storage: "Encrypted local study storage\nraw streams only if consented\n+ derived metrics + audit trail" {
+    class: software
+  }
+  optional_lsl: "Optional LSL / LabRecorder\nfor a separate acquisition tool\nthat publishes a declared stream" {
+    class: optional
+  }
+
+  packscope -> storage: "session data"
+  optional_lsl -> packscope: "stream schema + timestamps" {
+    style.stroke-dash: 3
+  }
+}
+
+# Host connections. Only the route chosen above should be live in a session.
+study_station.display -> workstation.packscope: "HDMI / DisplayPort\nactual stimulus display" {
+  style.stroke: "#2563EB"
+  style.stroke-width: 2
+}
+study_station.gaze.webcam -> workstation.packscope: "USB video" {
+  style.stroke: "#2563EB"
+  style.stroke-width: 2
+}
+study_station.gaze.tracker -> workstation.packscope: "USB / Ethernet\ntracker samples" {
+  style.stroke: "#64748B"
+  style.stroke-dash: 3
+}
+eeg_routes.arduino_path.host_usb -> workstation.packscope: "pyserial\nArduino Brain CSV" {
+  style.stroke: "#7C3AED"
+  style.stroke-width: 2
+}
+eeg_routes.direct_path.host_serial -> workstation.packscope: "pyserial\nThinkGear packets" {
+  style.stroke: "#7C3AED"
+  style.stroke-width: 2
+}
+eeg_routes.openbci_path.dongle -> workstation.packscope: "BrainFlow\nraw EEG frames" {
+  style.stroke: "#7C3AED"
+  style.stroke-width: 2
+}
+
+session_rules: "Session rules" {
+  class: warning
+  one_eeg: "Select ONE EEG route:\nArduino CSV OR direct ThinkGear OR OpenBCI."
+  one_gaze: "Select ONE gaze route:\nwebcam OR dedicated tracker.\nCalibrate against this exact display before each session."
+  timing: "Record timestamp origin, data loss, calibration error,\nelectrode montage/reference, and quality flags.\nDo not assume clocks are synchronized by default."
+  safety: "Do not connect unknown headset UART pins or electrodes\nto mains-powered equipment. Use documented battery-powered\nhardware and verify the exact revision's electrical requirements."
+}
+
+# Establish predictable stacked layout without adding visible paths.
+study_station -> eeg_routes: {style.opacity: 0}
+eeg_routes -> workstation: {style.opacity: 0}
+workstation -> session_rules: {style.opacity: 0}
