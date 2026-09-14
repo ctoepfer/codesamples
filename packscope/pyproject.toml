@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "packscope"
+version = "0.1.0"
+description = "Quality-gated EEG and eye-tracking tools for packaging and advertising research."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "PackScope contributors" }]
+keywords = ["eeg", "eye-tracking", "packaging", "openbci", "mindflex", "neurosky"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+serial = ["pyserial>=3.5"]
+brainflow = ["brainflow>=5.16"]
+lsl = ["pylsl>=1.16"]
+webcam = ["mediapipe>=0.10", "opencv-python>=4.9"]
+reporting = ["Pillow>=10.0"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6"]
+
+[project.scripts]
+packscope = "packscope.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/your-org/packscope"
+Repository = "https://github.com/your-org/packscope"
+Issues = "https://github.com/your-org/packscope/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/packscope"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

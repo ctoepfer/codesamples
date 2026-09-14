@@ -1,0 +1,26 @@
+PackScope
+Copyright 2026 PackScope contributors
+
+This product is licensed under the Apache License, Version 2.0.
+
+PackScope has optional runtime integrations. They are not bundled in this repository
+and users must review their licenses before distribution:
+
+* BrainFlow (MIT License; see BrainFlow's distribution notices, including any
+  SimpleBLE-related conditions): https://github.com/brainflow-dev/brainflow
+* pylsl/liblsl (MIT License): https://github.com/labstreaminglayer/pylsl
+* NumPy (BSD-3-Clause): https://numpy.org
+* SciPy (BSD-3-Clause): https://scipy.org
+* pyserial (BSD-3-Clause): https://pyserial.readthedocs.io
+* MediaPipe (Apache-2.0): https://github.com/google-ai-edge/mediapipe
+* OpenCV 4.5+ (Apache-2.0): https://opencv.org/license/
+* Pillow (HPND): https://python-pillow.org
+
+The repository contains no NeuroSky SDK, firmware, assets, or proprietary
+algorithms. Its ThinkGear parser is independently implemented from the publicly
+documented packet format. NeuroSky, MindFlex, OpenBCI, BrainFlow, Lab Streaming
+Layer, MediaPipe, PyGaze, Arduino, and their respective logos are trademarks or
+names of their respective owners. No endorsement is implied.
+
+PyGaze is GPL-3.0 and is not a PackScope dependency. Users considering a PyGaze
+connector should conduct their own license review before distribution.
