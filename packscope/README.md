@@ -657,3 +657,92 @@ fraction of non-DC Hann-windowed periodogram power within ±1 Hz of mains freque
 assessed per channel. Unresolvable mains frequencies fail the enabled gate.
 Amplitude thresholds use device units; defaults cannot establish signal validity.
 The minimum window duration counts sample periods (`sample_count / sampling_rate`).
+
+## Why PackScope for Homebrewers & Small Breweries?
+
+PackScope is accessible, Apache-2.0 open-source software for **homebrewers, craft
+soda makers, microbreweries, and artisan package designers** who want to try fun,
+low-stakes visual-sensory experiments. Start with synthetic data on your own laptop
+before deciding whether to collect anything at a club bottle-share or taproom pilot.
+No cloud account, hardware, or plotting library is needed for the synthetic tables.
+
+Try comparing a botanical bottle label with a minimalist design, reviewing whether
+calibrated gaze reached a recipe panel, or recording a separately consented taste
+rating after exposure. Keep variants versioned, record serving/blinding conditions,
+and discuss the descriptive observations alongside ordinary participant feedback.
+These are small packaging-design experiments, not automated label competitions or
+neural liking tests. The same workflow fits craft soda and other non-alcoholic drinks.
+
+From the `packscope` directory:
+
+```bash
+python examples/homebrew_label_tasting_demo.py
+# Optional GIF export; install once, then all demo execution is offline:
+python -m pip install -e '.[reporting]'
+python examples/homebrew_label_tasting_demo.py --output-dir homebrew_demo_output
+```
+
+The demo compares **Vintage Botanical Stout** and **Minimalist Modern Stout** using
+three synthetic participants, quality-gated EEG/gaze, and supplied post-exposure
+9-point hedonic ratings. It prints descriptive tables and rejection counts. With
+reporting extras, it draws two schematic label images and saves a scanpath GIF for
+each. Without those extras it reports animation unavailability and still completes
+the tables. The protocol is explicitly open label exposure; ratings are generated
+independently of EEG and gaze. A demonstration cannot establish a packaging effect
+on flavor perception.
+
+## Animated gaze and EEG review
+
+```python
+from packscope.models import MetricStatus
+from packscope.reporting.animation import render_gaze_scanpath_animation
+from packscope.testing.synthetic import generate_gaze_samples
+
+result = render_gaze_scanpath_animation(
+    list(generate_gaze_samples(duration_s=4)),
+    output_path="scanpath.gif", fps=10,
+    # background_image_path="my-versioned-label.png",  # exact displayed stimulus
+)
+if result.status == MetricStatus.AVAILABLE:
+    print(result.value)
+else:
+    print(result.reason, result.details)
+```
+
+```bash
+packscope animate-scanpath --gaze-file gaze.json --stimulus label.png --output scanpath.gif
+```
+
+`--stimulus` is optional; `--fps` defaults to 10. Input uses the same JSON gaze
+records/envelopes as `generate-heatmap`. Success prints a JSON `MetricResult` and
+returns exit code 0; unavailable animation prints its reason and returns 2.
+GIF needs Matplotlib and Pillow from `packscope[reporting]`. An `.mp4` destination
+instead needs an external **FFmpeg** installation discoverable by Matplotlib;
+FFmpeg is not installed by the Python extra. Missing reporting libraries or FFmpeg
+produce `UNAVAILABLE` with `MISSING_DEPENDENCY`, without a partial output file.
+
+Gaze playback follows elapsed acquisition time at the selected frame rate, retaining
+only actual observations with at most a 100 ms hold. Invalid, uncalibrated, or
+quality-flagged samples and long gaps break the trail. Blank frames show dropouts;
+there is no interpolation across them. Sampling at the output frame rate can omit
+brief observations. Rings grow with elapsed duration within the existing I-DT
+fixation detector's output (0.05 normalized dispersion, 0.1 s minimum duration/gap).
+Arrow direction and neutral viridis colors convey gaze order, not liking or engagement.
+The stimulus image preserves its aspect ratio and top-left normalized coordinates;
+use the original display crop so the overlay aligns with recorded gaze.
+
+`render_eeg_psd_waterfall_animation(eeg_frames, window_size_sec=1.0,
+output_path="eeg_psd.gif")` exports evolving per-channel Welch PSD curves over
+0–50 Hz, with explicit channel labels and a fixed power scale. It requires at least
+100 Hz sampling, eight samples per window, consistent device/channel/unit metadata,
+and passing EEG gates for every frame and window. It uses full non-overlapping
+windows within each frame; incomplete tails or quality failures make the export
+unavailable. This is an offline replay at **one window per playback second**, with
+acquisition times displayed; it is not a live stream or a mental-state measurement.
+
+Exports use headless rendering and replace the destination only after successful
+encoding. Split long recordings: each export is limited to 10,000 animation frames
+or PSD windows because GIF writers buffer frames in memory. Successful results
+contain an explicit `ArtifactPath` string, separate from numeric scores; numeric
+metrics still require finite values. JSON serialization marks such values with
+`value_type: "artifact_path"` for an unambiguous round trip.

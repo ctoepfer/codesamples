@@ -174,7 +174,7 @@ missing protocol, missing hedonic scores, and quality-flagged ratings return
 require free-text consent. The result wrapper now accepts structured dataclass
 payloads as well as numeric metrics, recursively rejecting non-finite numeric fields.
 Existing EEG status values and numeric behavior remain available. The version-one
-JSON serializer continues to support numeric `MetricResult` payloads only; it
+JSON serializer supports numeric and explicitly tagged artifact-path `MetricResult` payloads; it
 explicitly rejects structured results rather than exporting an unreadable schema.
 
 ```mermaid

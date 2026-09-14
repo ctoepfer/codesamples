@@ -40,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
     heatmap = subparsers.add_parser("generate-heatmap", help="render calibrated gaze density from a JSON log")
     heatmap.add_argument("path", type=Path)
     heatmap.add_argument("--output", type=Path, required=True)
+    scanpath = subparsers.add_parser("animate-scanpath", help="export a calibrated gaze replay as GIF or MP4")
+    scanpath.add_argument("--gaze-file", type=Path, required=True)
+    scanpath.add_argument("--stimulus", type=Path)
+    scanpath.add_argument("--output", type=Path, required=True)
+    scanpath.add_argument("--fps", type=int, default=10)
     return parser
 
 
@@ -70,6 +75,16 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run_command(args: argparse.Namespace) -> int:
+    if args.command == "animate-scanpath":
+        from packscope.io.logs import read_gaze_log
+        from packscope.models import MetricStatus
+        from packscope.reporting.animation import render_gaze_scanpath_animation
+
+        result = render_gaze_scanpath_animation(read_gaze_log(args.gaze_file),
+                                                str(args.stimulus) if args.stimulus else None,
+                                                str(args.output), args.fps)
+        print(json.dumps(asdict(result), indent=2, allow_nan=False))
+        return 0 if result.status == MetricStatus.AVAILABLE else 2
     if args.command == "doctor":
         extras = {
             "brainflow": ("brainflow",),
@@ -129,7 +144,7 @@ def _run_command(args: argparse.Namespace) -> int:
         )
         figure, axis = plt.subplots()
         try:
-            plotted = axis.imshow(density, origin="upper", extent=(0, 1, 1, 0), cmap="inferno")
+            plotted = axis.imshow(density, origin="upper", extent=(0, 1, 1, 0), cmap="viridis")
             axis.set(xlabel="Normalized x", ylabel="Normalized y", title="Gaze sample density")
             figure.colorbar(plotted, ax=axis, label="Sample count")
             args.output.parent.mkdir(parents=True, exist_ok=True)

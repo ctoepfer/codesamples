@@ -57,10 +57,10 @@ def render_gaze_heatmap(
     if plotted == 0:
         raise ValueError("No valid gaze samples are available for heatmap rendering.")
     normalized = density / density.max()
-    red = np.clip(255.0 * np.minimum(1.0, normalized * 2.0), 0, 255).astype(np.uint8)
-    green = np.clip(255.0 * np.minimum(1.0, np.maximum(0.0, normalized * 2.0 - 1.0)), 0, 255).astype(np.uint8)
+    # Grayscale density is a neutral measurement overlay, never a mental-state color scale.
+    shade = (normalized * 255.0).astype(np.uint8)
     alpha = (normalized * 255.0 * opacity).astype(np.uint8)
-    rgba = np.dstack((red, green, np.zeros_like(red), alpha))
+    rgba = np.dstack((shade, shade, shade, alpha))
     overlay = Image.fromarray(rgba, mode="RGBA")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     Image.alpha_composite(base, overlay).save(output_path)

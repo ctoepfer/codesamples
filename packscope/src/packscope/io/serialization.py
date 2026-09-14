@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from packscope.errors import ConfigurationError
-from packscope.models import EegFrame, GazeSample, MetricResult, MetricStatus
+from packscope.models import ArtifactPath, EegFrame, GazeSample, MetricResult, MetricStatus
 from packscope.privacy import ConsentScope, SessionConsent, SessionManifest, atomic_write_json
 
 
@@ -56,6 +56,8 @@ def to_dict(value: Serializable, metadata: ExportMetadata) -> dict[str, Any]:
         payload["timestamps_monotonic_s"] = value.timestamps_monotonic_s.tolist()
     elif isinstance(value, MetricResult):
         payload["status"] = value.status.value
+        if isinstance(value.value, ArtifactPath):
+            payload["value_type"] = "artifact_path"
     elif isinstance(value, SessionManifest):
         payload["consent"]["granted_scopes"] = sorted(s.value for s in value.consent.granted_scopes)
     elif not isinstance(value, GazeSample):
@@ -121,6 +123,11 @@ def from_dict(envelope: dict[str, Any]) -> Serializable:
             value = GazeSample(**payload)
         elif kind == "MetricResult":
             payload["status"] = MetricStatus(payload["status"])
+            value_type = payload.pop("value_type", None)
+            if value_type == "artifact_path":
+                payload["value"] = ArtifactPath(payload["value"])
+            elif value_type is not None:
+                raise ConfigurationError("Unknown metric value_type.")
             value = MetricResult(**payload)
         elif kind == "SessionManifest":
             consent = dict(payload["consent"])

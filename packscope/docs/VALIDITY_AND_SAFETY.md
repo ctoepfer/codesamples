@@ -94,3 +94,26 @@ they are excluded from descriptive join tables. Missing consent, flagged ratings
 and missing hedonic scores produce unavailable results with reasons, never imputed
 hedonic values. A zero paired sample count describes absence of qualifying pairs;
 it must not be presented as a neutral or zero-liking response.
+
+## Animated overlays and small craft-producer pilots
+
+Animated gaze trails, fixation rings, and heatmaps are **qualitative diagnostic
+tools for scanpath order and data verification**. They are not automated measures
+of cognitive interest, emotional engagement, preference, or purchase behavior.
+Neutral grayscale/viridis encodings describe recorded locations, sample density,
+and fixation duration. A larger ring is a longer detected fixation, not a stronger
+reaction. Detector thresholds and display frame rate affect the visual sequence.
+
+Verify the exact stimulus version, viewport crop, calibration, timestamp order,
+and missing samples before reviewing an overlay. Playback leaves gaze dropouts
+blank and breaks trails rather than inventing paths through them. EEG PSD animations
+show quality-gated, named-channel spectra on a fixed scale; playback time need not
+match acquisition time, which is labelled. A visually striking spectrum or gaze
+trail is not evidence that packaging caused a taste response.
+
+Homebrewers, craft soda makers, small breweries, and artisan package designers can
+use the synthetic bottle-share example to learn this workflow without collecting
+participant data. Keep real club bottle-shares and taproom label pilots voluntary,
+consented, and low stakes, retaining the serving, blinding, washout, and
+counterbalancing controls described above. Treat findings as descriptive prompts
+for discussion with participants, not scientific proof that one label tastes better.

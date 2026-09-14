@@ -48,6 +48,20 @@ class MetricReason(StrEnum):
     PROVENANCE_MISMATCH = "PROVENANCE_MISMATCH"
     INVALID_ATTRIBUTION = "INVALID_ATTRIBUTION"
     NO_QUALIFYING_PAIRS = "NO_QUALIFYING_PAIRS"
+    MISSING_DEPENDENCY = "MISSING_DEPENDENCY"
+    NO_VALID_SAMPLES = "NO_VALID_SAMPLES"
+    ANIMATION_QUALITY_FAILED = "ANIMATION_QUALITY_FAILED"
+    INVALID_ANIMATION_INPUT = "INVALID_ANIMATION_INPUT"
+    ANIMATION_RENDER_FAILED = "ANIMATION_RENDER_FAILED"
+
+
+class ArtifactPath(str):
+    """A non-numeric result identifying an exported local file, never a score."""
+
+    def __new__(cls, value: str) -> ArtifactPath:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Artifact paths must be non-empty strings.")
+        return super().__new__(cls, value)
 
 
 T = TypeVar("T")
@@ -71,8 +85,12 @@ class MetricResult(Generic[T]):
         if self.status != MetricStatus.AVAILABLE and self.value is not None:
             raise ValueError("An unavailable metric must not contain a numeric value.")
         if self.value is not None:
-            if isinstance(self.value, bool) or not (isinstance(self.value, Real) or is_dataclass(self.value)):
-                raise ValueError("Metric values must be numeric or structured dataclass records.")
+            if isinstance(self.value, bool) or not (
+                isinstance(self.value, (Real, ArtifactPath)) or is_dataclass(self.value)
+            ):
+                raise ValueError(
+                    "Metric values must be numeric, structured dataclass records, or explicit artifact paths."
+                )
             _validate_finite_payload(self.value)
 
 

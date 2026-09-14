@@ -6,12 +6,15 @@ import json
 import os
 import subprocess
 import sys
+from dataclasses import asdict, replace
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
 from packscope.cli import main
 from packscope.io.serialization import ExportMetadata, write_json
+from packscope.models import ArtifactPath, MetricReason, MetricResult, MetricStatus
 from packscope.testing.synthetic import generate_eeg_frames
 
 
@@ -91,6 +94,157 @@ def test_missing_matplotlib(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Capt
     monkeypatch.setattr(builtins, "__import__", guarded)
     assert main(["generate-heatmap", "unused.json", "--output", "unused.png"]) == 2
     assert "packscope[reporting]" in capsys.readouterr().err
+
+
+# ============================================================================
+# Tests for `packscope doctor`
+# ============================================================================
+
+
+def test_cli_doctor_all_extras_installed(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test `packscope doctor` output when optional extras are importable."""
+    with patch("packscope.cli.main.importlib.util.find_spec", return_value=object()):
+        exit_code = main(["doctor"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "runtime/device readiness is not tested" in captured.out
+    assert "brainflow | available" in captured.out
+    assert "reporting | available" in captured.out
+
+
+def test_cli_doctor_missing_extras(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test installed-module diagnostics without connecting to any hardware."""
+
+    def installed(name: str) -> object | None:
+        return None if name in {"brainflow", "serial"} else object()
+
+    with patch("packscope.cli.main.importlib.util.find_spec", side_effect=installed):
+        exit_code = main(["doctor"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "brainflow | missing: brainflow" in captured.out
+    assert "lsl | available" in captured.out
+
+
+# ============================================================================
+# Tests for `packscope run-quality-gates`
+# ============================================================================
+
+
+@pytest.fixture
+def temp_eeg_file(tmp_path: Path) -> Path:
+    """Create a temporary JSON file containing synthetic raw EEG frame dicts."""
+    frames = list(generate_eeg_frames(duration_s=12))
+    frames[1] = replace(frames[1], quality_flags=("AMPLITUDE_SATURATION",))
+    eeg_data = []
+    for frame in frames:
+        payload = asdict(frame)
+        payload["samples"] = frame.samples.tolist()
+        payload["timestamps_monotonic_s"] = frame.timestamps_monotonic_s.tolist()
+        eeg_data.append(payload)
+    file_path = tmp_path / "raw_eeg.json"
+    file_path.write_text(json.dumps(eeg_data))
+    return file_path
+
+
+def test_cli_run_quality_gates_success(temp_eeg_file: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Read real raw-frame JSON and retain rejection accounting."""
+    assert main(["run-quality-gates", str(temp_eeg_file)]) == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["window_count"] == 3
+    assert summary["accepted_window_indices"] == [0, 2]
+    assert summary["rejection_ratio"] == pytest.approx(1 / 3)
+    assert summary["windows"][1]["flags"] == ["AMPLITUDE_SATURATION"]
+
+
+def test_cli_run_quality_gates_failed_quality(temp_eeg_file: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A successful report can describe a recording with every window rejected."""
+    assert main(["run-quality-gates", str(temp_eeg_file), "--max-absolute-amplitude", ".01"]) == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["rejection_ratio"] == 1
+    assert summary["accepted_window_indices"] == []
+    assert all("amplitude_exceeds_limit" in window["flags"] for window in summary["windows"])
+
+
+def test_cli_run_quality_gates_invalid_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A missing input returns a nonzero status and an actionable error."""
+    assert main(["run-quality-gates", str(tmp_path / "missing.json")]) == 2
+    assert "Cannot read JSON log" in capsys.readouterr().err
+
+
+@pytest.fixture
+def temp_gaze_file(tmp_path: Path) -> Path:
+    """Create a temporary JSON file containing synthetic gaze sample dicts."""
+    gaze_data = [
+        {"timestamp_monotonic_s": 0.0, "valid": True, "x_norm": 0.2, "y_norm": 0.3, "confidence": 1.0},
+        {"timestamp_monotonic_s": 0.1, "valid": True, "x_norm": 0.25, "y_norm": 0.32, "confidence": 1.0},
+        {"timestamp_monotonic_s": 0.2, "valid": False, "x_norm": None, "y_norm": None, "confidence": 0.0},
+        {"timestamp_monotonic_s": 0.3, "valid": True, "x_norm": 0.8, "y_norm": 0.1, "confidence": 1.0},
+    ]
+    for sample in gaze_data:
+        sample["calibration_id"] = "test-calibration-v1"
+    file_path = tmp_path / "gaze_samples.json"
+    file_path.write_text(json.dumps(gaze_data))
+    return file_path
+
+
+def test_cli_animate_scanpath_success(temp_gaze_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Test successful execution of the animate-scanpath CLI subcommand."""
+    output_gif = tmp_path / "output_scanpath.gif"
+    stimulus = tmp_path / "label-v1.png"
+    mock_result = MetricResult("scanpath", MetricStatus.AVAILABLE, ArtifactPath(str(output_gif)))
+
+    with patch("packscope.reporting.animation.render_gaze_scanpath_animation", return_value=mock_result) as mock_render:
+        exit_code = main(
+            [
+                "animate-scanpath",
+                "--gaze-file",
+                str(temp_gaze_file),
+                "--stimulus",
+                str(stimulus),
+                "--output",
+                str(output_gif),
+                "--fps",
+                "20",
+            ]
+        )
+
+    assert exit_code == 0
+    mock_render.assert_called_once()
+    samples, background, destination, fps = mock_render.call_args.args
+    assert (background, destination, fps) == (str(stimulus), str(output_gif), 20)
+    assert len(samples) == 4 and not samples[2].valid
+    assert samples[2].x_norm is None and samples[2].y_norm is None
+    assert all(sample.calibration_id == "test-calibration-v1" for sample in samples)
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["value"] == str(output_gif) and payload["status"] == "available"
+
+
+def test_cli_animate_scanpath_missing_dependency(
+    temp_gaze_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test animate-scanpath subcommand when optional reporting dependencies are missing."""
+    output_gif = tmp_path / "output_scanpath.gif"
+    mock_result = MetricResult(
+        "scanpath",
+        MetricStatus.UNAVAILABLE,
+        None,
+        MetricReason.MISSING_DEPENDENCY,
+    )
+
+    with patch("packscope.reporting.animation.render_gaze_scanpath_animation", return_value=mock_result):
+        exit_code = main(["animate-scanpath", "--gaze-file", str(temp_gaze_file), "--output", str(output_gif)])
+
+    assert exit_code != 0
+    captured = capsys.readouterr()
+    assert json.loads(captured.out)["reason"] == "MISSING_DEPENDENCY"
+
+
+def test_cli_animate_scanpath_missing_gaze_file(tmp_path: Path) -> None:
+    """Test animate-scanpath CLI behavior when the gaze input file does not exist."""
+    non_existent_file = tmp_path / "does_not_exist.json"
+
+    assert main(["animate-scanpath", "--gaze-file", str(non_existent_file), "--output", str(tmp_path / "out.gif")]) == 2
 
 
 def test_heatmap(tmp_path: Path) -> None:
