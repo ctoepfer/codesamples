@@ -215,3 +215,13 @@ synthetic Gose fixture, explicit quantity/dimension assertions, count and yeast
 regressions, native BSMX ounce checks independent of extensions, strict CLI/file
 preservation tests, Unicode, invalid values, source evidence, and a 6×6 fixture
 conversion matrix. See [AUDIT.md](AUDIT.md) for the audit and verification record.
+
+Only add original or redistributable recipe exports to `tests/fixtures`. For
+regressions based on customer or third-party recipes, use reduced synthetic
+fixtures containing only the fields needed to demonstrate the conversion bug.
+
+## License
+
+brewconvert is available under the [MIT License](LICENSE). You may use,
+modify, redistribute, and incorporate it into commercial or open-source
+projects, subject to retaining the license notice.
