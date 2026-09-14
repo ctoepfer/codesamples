@@ -9,7 +9,7 @@ description = "Quality-gated EEG and eye-tracking tools for packaging and advert
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
-authors = [{ name = "PackScope contributors" }]
+authors = [{ name = "Charles Toepfer, Pacific Brewing Supplies" }]
 keywords = ["eeg", "eye-tracking", "packaging", "openbci", "mindflex", "neurosky"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",

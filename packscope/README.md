@@ -1,5 +1,7 @@
 # PackScope
 
+Created by Charles Toepfer of Pacific Brewing Supplies.
+
 **PackScope** is a Python toolkit for transparent, quality-gated analysis of EEG and eye-tracking data in packaging and advertising research. It helps researchers compare label and ad variants using calibrated gaze, timestamped brain signals, and explicit uncertainty checks without overstating what the measurements can prove.
 
 > PackScope is a local-first research utility. It does **not** diagnose, detect emotion, determine intent, measure attention, predict purchases, or prove that a packaging element caused a physiological response. Its outputs are descriptive, quality-gated inputs to a broader design-research workflow.
