@@ -178,9 +178,15 @@ occurs. Writers report measured data they cannot emit. Water salts stay separate
 list entries; name equality never merges mash and sparge additions. Missing
 phase mappings are reported rather than substituted with Boil.
 
-All semantic warnings include recipe, ingredient/field, source, interpretation,
-target, and reason. Reports expose `warnings`, the unsafe subset `errors`, and
-`notes`. The implemented diagnostic codes are:
+Every semantic diagnostic is a structured `Diagnostic` (`code`, `recipe`,
+`ingredient`, `source`, `interpreted`, `target`, `reason`, `unsafe`), available
+as `report.diagnostics: list[Diagnostic]`. `report.warnings` (every
+diagnostic's rendered message) and `report.errors` (the unsafe subset) are
+derived read-only views over `diagnostics`, kept for backward compatibility
+with existing string-based callers -- new integrations should read
+`diagnostics` directly rather than parsing message text. `report.notes`
+remains a plain, directly-appendable list (used by the CLI for informational
+output unrelated to `.add()`). The implemented diagnostic codes are:
 
 - Input: `missing-quantity`, `invalid-quantity`, `ambiguous-unit`, `inferred-unit`,
   `ingredient-dimension`, `ambiguous-display`, `invalid-display`,

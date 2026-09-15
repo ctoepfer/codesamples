@@ -3,6 +3,15 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from brewconvert import (
+    ConversionReport,
+    Diagnostic,
+    ValidationError,
+    read_recipes,
+    validate_recipes,
+    write_recipes,
+)
 from brewconvert.cli import main
 from brewconvert.model import (
     FermentableAddition,
@@ -13,14 +22,6 @@ from brewconvert.model import (
     YeastAddition,
 )
 from brewconvert.report import compare_recipes
-
-from brewconvert import (
-    ConversionReport,
-    ValidationError,
-    read_recipes,
-    validate_recipes,
-    write_recipes,
-)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 TOL = Decimal("1e-8")  # kg/L across text format serialization
@@ -163,6 +164,39 @@ def test_whirlfloc_export_is_explicitly_lossy(tmp_path):
     with pytest.raises(ValidationError):
         write([r], tmp_path / "strict.xml", strict=True)
     assert not (tmp_path / "strict.xml").exists()
+
+
+def test_report_exposes_structured_diagnostics(tmp_path):
+    """report.diagnostics gives callers real Diagnostic objects instead of
+    requiring them to regex-parse report.warnings/report.errors strings."""
+    r = Recipe(
+        "Tablet", miscs=[MiscAddition("Whirlfloc", quantity=Quantity(1, "tablet"))]
+    )
+    report = write([r], tmp_path / "out.xml")
+    matches = [d for d in report.diagnostics if d.code == "count-unsupported"]
+    assert len(matches) == 1
+    diagnostic = matches[0]
+    assert isinstance(diagnostic, Diagnostic)
+    assert diagnostic.recipe == "Tablet"
+    assert diagnostic.ingredient == "Whirlfloc"
+    assert diagnostic.unsafe is True
+    # .message (used to derive .warnings/.errors) is byte-identical to the
+    # pre-existing hand-formatted string every consumer already depends on.
+    assert diagnostic.message in report.warnings
+    assert diagnostic.message in report.errors
+
+
+def test_warnings_and_errors_are_derived_from_diagnostics_not_independent(tmp_path):
+    report = ConversionReport("model", "beerxml")
+    report.add("some-code", "R", "I", "src", "interp", "tgt", "a reason", unsafe=True)
+    assert len(report.diagnostics) == 1
+    assert report.warnings == [report.diagnostics[0].message]
+    assert report.errors == [report.diagnostics[0].message]
+    # Adding the identical call again does not duplicate the diagnostic or
+    # the derived string (matches the pre-existing dedup-by-content behavior).
+    report.add("some-code", "R", "I", "src", "interp", "tgt", "a reason", unsafe=True)
+    assert len(report.diagnostics) == 1
+    assert len(report.warnings) == 1
 
 
 def xml_misc(

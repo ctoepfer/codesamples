@@ -92,6 +92,7 @@ def write_recipes(
 
 __all__ = [
     "ConversionReport",
+    "Diagnostic",
     "Recipe",
     "ValidationError",
     "detect_format",
@@ -100,4 +101,4 @@ __all__ = [
     "write_recipes",
 ]
 
-from .report import ConversionReport, ValidationError, validate_recipes
+from .report import ConversionReport, Diagnostic, ValidationError, validate_recipes

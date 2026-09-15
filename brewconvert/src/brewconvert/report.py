@@ -13,13 +13,42 @@ class ValidationError(ValueError):
     pass
 
 
+@dataclass(frozen=True)
+class Diagnostic:
+    """One structured semantic diagnostic.
+
+    `.message` renders the exact text `ConversionReport.add()` has always
+    produced, so every existing string-based consumer (the CLI, `.text()`,
+    and `.warnings`/`.errors`, both now derived from `diagnostics`) sees
+    byte-identical output. `source`/`interpreted`/`target` are deliberately
+    untyped (`object`) -- callers pass strings, numbers, lists, and dicts
+    today, and this is a structured *view* onto that, not a stricter schema.
+    """
+
+    code: str
+    recipe: object
+    ingredient: object
+    source: object
+    interpreted: object
+    target: object
+    reason: str
+    unsafe: bool = False
+
+    @property
+    def message(self) -> str:
+        return (
+            f"[{self.code}] recipe={self.recipe!r} ingredient={self.ingredient!r}; "
+            f"source={self.source!r}; interpreted={self.interpreted!r}; "
+            f"target={self.target!r}; {self.reason}"
+        )
+
+
 @dataclass
 class ConversionReport:
     source_format: str = "model"
     target_format: str = "validation"
-    warnings: list[str] = field(default_factory=list)
+    diagnostics: list[Diagnostic] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
-    errors: list[str] = field(default_factory=list)
 
     def add(
         self,
@@ -32,14 +61,23 @@ class ConversionReport:
         reason,
         unsafe=False,
     ):
-        message = (
-            f"[{code}] recipe={recipe!r} ingredient={ingredient!r}; source={source!r}; "
-            f"interpreted={interpreted!r}; target={target!r}; {reason}"
+        diagnostic = Diagnostic(
+            code, recipe, ingredient, source, interpreted, target, reason, unsafe
         )
-        if message not in self.warnings:
-            self.warnings.append(message)
-        if unsafe and message not in self.errors:
-            self.errors.append(message)
+        if diagnostic not in self.diagnostics:
+            self.diagnostics.append(diagnostic)
+
+    @property
+    def warnings(self) -> list[str]:
+        """Every diagnostic's rendered message, in the order added. Derived
+        from `diagnostics`, not an independent list -- kept for backward
+        compatibility with every existing string-based caller."""
+        return [d.message for d in self.diagnostics]
+
+    @property
+    def errors(self) -> list[str]:
+        """The unsafe subset of `warnings`, derived the same way."""
+        return [d.message for d in self.diagnostics if d.unsafe]
 
     def check(self):
         if self.errors:
